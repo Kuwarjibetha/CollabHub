@@ -2,7 +2,7 @@ const sequelize = require("../config/db");
 const User = require("./User/User");
 const Team = require("./Team/Team");
 const TeamMember = require("./TeamMember/TeamMember");
-
+const Message = require("./Message/Message");
 
 
 User.belongsToMany(Team, { through: TeamMember, foreignKey: "userId" }); // Ek User multiple Teams me ho sakta hai, aur woh connection TeamMember table se hota hai
@@ -15,9 +15,21 @@ TeamMember.belongsTo(Team, { foreignKey: "teamId" });
 Team.hasMany(TeamMember, { foreignKey: "teamId" });
 User.hasMany(TeamMember, { foreignKey: "userId" });
 
+
+
+
+Message.belongsTo(User, { foreignKey: "senderId", as: "sender" }); // Ek Message ka ek Sender (User) hota hai
+
+Message.belongsTo(Team, { foreignKey: "teamId" });
+Team.hasMany(Message, { foreignKey: "teamId" });
+
+
+User.hasMany(Message, { foreignKey: "senderId" });
+
 module.exports = {
   sequelize,
   User,
   Team,
   TeamMember,
+  Message
 };
