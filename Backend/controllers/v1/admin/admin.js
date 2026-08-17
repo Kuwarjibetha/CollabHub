@@ -69,6 +69,20 @@ async function getAnalyticsController(req, res) {
   }
 }
 
+async function getAllMessagesController(req, res) {
+  try { return res.status(200).json({ success: true, data: await adminService.getAllMessages(req.query) }); }
+  catch (err) { return res.status(err.statusCode || 500).json({ success: false, message: err.message || "Something went wrong" }); }
+}
+
+async function broadcastController(req, res) {
+  try {
+    const notifications = await adminService.broadcast(req.body);
+    const io = req.app.get("io");
+    if (io) notifications.forEach((notification) => io.to(`user:${notification.userId}`).emit("notification", notification));
+    return res.status(201).json({ success: true, message: "Broadcast sent", data: { recipients: notifications.length } });
+  } catch (err) { return res.status(err.statusCode || 500).json({ success: false, message: err.message || "Something went wrong" }); }
+}
+
 module.exports = {
   getAllUsersController,
   toggleUserBlockController,
@@ -77,4 +91,6 @@ module.exports = {
   deleteTeamController,
   deleteAnyMessageController,
   getAnalyticsController,
+  getAllMessagesController,
+  broadcastController,
 };

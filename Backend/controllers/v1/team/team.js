@@ -83,9 +83,46 @@ async function leaveTeamController(req, res) {
     }
 }
 
+async function getTeamMembersController(req, res) {
+    try {
+        const { teamId } = req.params;
+        const members = await teamService.getTeamMembers(req.user.userId, teamId);
+
+        return res.status(200).json({
+            success: true,
+            message: "Team members fetched",
+            data: members,
+        });
+    } catch (err) {
+        return res.status(err.statusCode || 500).json({
+            success: false,
+            message: err.message || "Something went wrong",
+        });
+    }
+}
+
+async function updateMemberRoleController(req, res) {
+  try { const member = await teamService.updateMemberRole(req.user.userId, req.params.teamId, req.params.userId, req.body.role); return res.status(200).json({ success: true, data: member }); }
+  catch (err) { return res.status(err.statusCode || 500).json({ success: false, message: err.message || "Something went wrong" }); }
+}
+
+async function removeMemberController(req, res) {
+  try { const result = await teamService.removeMember(req.user.userId, req.params.teamId, req.params.userId); return res.status(200).json({ success: true, message: result.message }); }
+  catch (err) { return res.status(err.statusCode || 500).json({ success: false, message: err.message || "Something went wrong" }); }
+}
+
+async function deleteTeamController(req, res) {
+  try { const result = await teamService.deleteTeamByOwner(req.user.userId, req.params.teamId); return res.status(200).json({ success: true, message: result.message }); }
+  catch (err) { return res.status(err.statusCode || 500).json({ success: false, message: err.message || "Something went wrong" }); }
+}
+
 module.exports = {
     createTeamController,
     joinTeamController,
     getMyTeamsController,
     leaveTeamController,
+  getTeamMembersController,
+  updateMemberRoleController,
+  removeMemberController,
+  deleteTeamController,
 };

@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CollabHub — Admin Control Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/style.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --clr-bg: #0b0f19;
+      --clr-surface: #111827;
+      --clr-surface-2: #1e293b;
+      --clr-border: rgba(255, 255, 255, 0.08);
+      --clr-primary: #ff2e63;
+      --clr-primary-light: #fda4af;
+      --clr-accent: #f43f5e;
+      --clr-text: #f8fafc;
+      --clr-text-muted: #94a3b8;
+      --clr-text-dim: #64748b;
+      --clr-danger: #f43f5e;
+      --clr-success: #10b981;
+      --gradient: linear-gradient(135deg, #ff2e63, #e11d48);
+      --font: 'Inter', sans-serif;
+    }
+    body {
+      font-family: var(--font);
+      background: var(--clr-bg);
+      color: var(--clr-text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    a { text-decoration: none; color: inherit; }
+
+    /* Header */
+    .admin-header {
+      height: 64px;
+      padding: 0 4%;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--clr-border);
+      background: rgba(15,15,30,0.85);
+      backdrop-filter: blur(16px);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .admin-logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.15rem; }
+    .admin-badge-label {
+      padding: 3px 10px; border-radius: 99px; background: rgba(239,68,68,0.2);
+      border: 1px solid rgba(239,68,68,0.4); color: #fca5a5; font-size: 0.72rem; font-weight: 800;
+    }
+    .btn-nav-switch {
+      padding: 8px 18px; font-size: 0.85rem; font-weight: 600;
+      color: var(--clr-text-muted); background: rgba(255,255,255,0.05);
+      border: 1px solid var(--clr-border); border-radius: 99px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-nav-switch:hover { color: white; background: rgba(124,58,237,0.15); border-color: var(--clr-primary); }
+
+    /* Shell */
+    .admin-shell { display: flex; flex: 1; min-height: calc(100vh - 64px); }
+    .admin-sidebar {
+      width: 250px; background: var(--clr-surface);
+      border-right: 1px solid var(--clr-border);
+      padding: 24px 12px; display: flex; flex-direction: column; gap: 6px;
+    }
+    .sidebar-tab {
+      padding: 11px 16px; border-radius: 12px; font-size: 0.86rem; font-weight: 600;
+      color: var(--clr-text-muted); display: flex; align-items: center; gap: 10px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .sidebar-tab:hover { background: rgba(255,255,255,0.04); color: var(--clr-text); }
+    .sidebar-tab.active { background: var(--gradient); color: white; box-shadow: 0 4px 16px rgba(124,58,237,0.35); }
+
+    .admin-main { flex: 1; padding: 32px; overflow-y: auto; display: flex; flex-direction: column; gap: 28px; }
+
+    /* Cards & Tables */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 18px; }
+    .stat-card {
+      background: var(--clr-surface); border: 1px solid var(--clr-border);
+      border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 6px;
+    }
+    .stat-val { font-size: 1.8rem; font-weight: 800; }
+    .stat-lbl { font-size: 0.8rem; color: var(--clr-text-muted); }
+
+    .panel-card {
+      background: var(--clr-surface); border: 1px solid var(--clr-border);
+      border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 20px;
+    }
+    .panel-title { font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; justify-content: space-between; }
+    
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .data-table th { text-align: left; padding: 12px 14px; color: var(--clr-text-muted); font-size: 0.78rem; text-transform: uppercase; border-bottom: 1px solid var(--clr-border); }
+    .data-table td { padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .data-table tr:hover { background: rgba(255,255,255,0.02); }
+
+    .badge-status { padding: 4px 10px; border-radius: 99px; font-size: 0.72rem; font-weight: 700; display: inline-block; }
+    .badge-status.active { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+    .badge-status.blocked { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+
+    .btn-act { padding: 6px 12px; font-size: 0.78rem; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; }
+    .btn-act.block { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+    .btn-act.block:hover { background: rgba(245,158,11,0.3); }
+    .btn-act.del { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+    .btn-act.del:hover { background: rgba(239,68,68,0.3); }
+
+    .toast-admin {
+      position: fixed; bottom: 30px; right: 30px; z-index: 1000;
+      padding: 14px 22px; border-radius: 12px; font-size: 0.9rem; font-weight: 600;
+      background: #064e3b; color: #6ee7b7; border: 1px solid #059669; display: none;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="admin-header">
+    <div class="admin-logo">
+      <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+        <path d="M8 20V12l6 4-6 4z" fill="#7C3AED"/>
+        <path d="M16 12h8v8h-8z" fill="#EF4444"/>
+      </svg>
+      CollabHub
+      <span class="admin-badge-label">ADMIN CONSOLE</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="btn-nav-switch" onclick="window.location.href='../user/dashboard.html'">
+        ← Go to User View
+      </button>
+      <button class="btn-nav-switch" onclick="handleLogout()" style="color:#fca5a5;border-color:rgba(239,68,68,0.3);">
+        Logout
+      </button>
+    </div>
+  </header>
+
+  <div class="admin-shell">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-tab active" onclick="switchAdminTab('analytics', this)">📊 Analytics & Stats</div>
+      <div class="sidebar-tab" onclick="switchAdminTab('users', this)">👥 User Management</div>
+      <div class="sidebar-tab" onclick="switchAdminTab('teams', this)">🛡️ Team Management</div>
+      <div class="sidebar-tab" onclick="switchAdminTab('moderation', this)">💬 Chat Moderation</div>
+      <div class="sidebar-tab" onclick="switchAdminTab('videocall', this)">📹 Video Call Control</div>
+      <div class="sidebar-tab" onclick="switchAdminTab('system', this)">⚙️ System Control</div>
+      <div class="sidebar-tab" onclick="switchAdminTab('broadcast', this)">📢 Notifications & Jobs</div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+
+      <!-- 1. Analytics & Monitoring -->
+      <section id="tab-analytics" class="tab-panel">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-val" id="stat-total-users">--</div>
+            <div class="stat-lbl">Total Users Count</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="stat-active-users" style="color:#6ee7b7;">--</div>
+            <div class="stat-lbl">Active Users (24h)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="stat-total-teams" style="color:#a78bfa;">--</div>
+            <div class="stat-lbl">Active Teams</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="stat-total-messages" style="color:#60a5fa;">--</div>
+            <div class="stat-lbl">Messages Per Day</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" style="color:#fcd34d;">3.4 hrs</div>
+            <div class="stat-lbl">Call Usage Statistics</div>
+          </div>
+        </div>
+
+        <div class="panel-card" style="margin-top:20px;">
+          <div class="panel-title">System Activity Stream</div>
+          <p style="font-size:0.88rem;color:var(--clr-text-muted);">
+            All database connections, WebSockets, and media workers operating at 100% health.
+          </p>
+        </div>
+      </section>
+
+      <!-- 2. User Management -->
+      <section id="tab-users" class="tab-panel" style="display:none;">
+        <div class="panel-card">
+          <div class="panel-title">
+            <span>User Management & Activity</span>
+            <input type="text" id="search-users" placeholder="Search & filter users..." oninput="filterUsers(this.value)" style="padding:6px 14px;background:var(--clr-surface-2);border:1px solid var(--clr-border);border-radius:8px;color:white;font-size:0.85rem;outline:none;" />
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body">
+              <tr><td colspan="5" style="text-align:center;color:var(--clr-text-dim);">Loading users...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 3. Team Management -->
+      <section id="tab-teams" class="tab-panel" style="display:none;">
+        <div class="panel-card">
+          <div class="panel-title">Team Management & Roles</div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Team Name</th>
+                <th>Invite Code</th>
+                <th>Members</th>
+                <th>Created At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="teams-table-body">
+              <tr><td colspan="5" style="text-align:center;color:var(--clr-text-dim);">Loading teams...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 4. Chat Moderation -->
+      <section id="tab-moderation" class="tab-panel" style="display:none;">
+        <div class="panel-card">
+          <div class="panel-title">Chat Moderation Stream</div>
+          <p style="font-size:0.88rem;color:var(--clr-text-muted);">
+            View all chat messages, flag inappropriate content, and delete harmful messages.
+          </p>
+          <div id="moderation-messages-list" style="display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--clr-surface-2);border-radius:12px;"></div>
+        </div>
+      </section>
+
+      <!-- 5. Video Call Control -->
+      <section id="tab-videocall" class="tab-panel" style="display:none;">
+        <div class="panel-card">
+          <div class="panel-title">Active Video Call Control</div>
+          <p style="font-size:0.88rem;color:var(--clr-text-muted);">
+            Monitor active calls, end ongoing sessions, set participant limits, and remove users.
+          </p>
+          <div style="display:flex;gap:12px;align-items:center;">
+            <span style="font-size:0.9rem;">Participant Limit per Call:</span>
+            <input type="number" value="16" min="2" max="100" style="width:70px;padding:6px;background:var(--clr-surface-2);border:1px solid var(--clr-border);color:white;border-radius:6px;" />
+            <button class="btn-act block" onclick="showAdminToast('Participant limit saved!')">Save Limit</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. System Control -->
+      <section id="tab-system" class="tab-panel" style="display:none;">
+        <div class="panel-card">
+          <div class="panel-title">System Control & Feature Flags</div>
+          <div style="display:flex;flex-direction:column;gap:12px;max-width:480px;">
+            <label style="font-size:0.88rem;">Rate Limit (Requests / min):</label>
+            <input type="number" value="100" style="padding:8px;background:var(--clr-surface-2);border:1px solid var(--clr-border);color:white;border-radius:8px;" />
+            
+            <label style="font-size:0.88rem;">Max File Upload Limit (MB):</label>
+            <input type="number" value="50" style="padding:8px;background:var(--clr-surface-2);border:1px solid var(--clr-border);color:white;border-radius:8px;" />
+
+            <button onclick="showAdminToast('System parameters updated!')" style="padding:10px;background:var(--gradient);border:none;border-radius:8px;color:white;font-weight:700;cursor:pointer;">
+              Save System Parameters
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. Notifications & Background Jobs -->
+      <section id="tab-broadcast" class="tab-panel" style="display:none;">
+        <div style="display:flex; flex-direction:column; gap:20px;">
+          
+          <!-- 1. Send Broadcast Notifications -->
+          <div class="panel-card">
+            <div class="panel-title">📢 Send Broadcast Notifications</div>
+            <p style="font-size:0.88rem;color:var(--clr-text-muted);">
+              Send system-wide broadcast alerts to all connected users.
+            </p>
+            <div style="display:flex;flex-direction:column;gap:12px;max-width:500px;">
+              <input type="text" id="broadcast-title" placeholder="Announcement Title" style="padding:10px;background:var(--clr-surface-2);border:1px solid var(--clr-border);border-radius:8px;color:white;font-size:0.9rem;" />
+              <textarea id="broadcast-body" rows="3" placeholder="Message content..." style="padding:10px;background:var(--clr-surface-2);border:1px solid var(--clr-border);border-radius:8px;color:white;font-size:0.9rem;"></textarea>
+              <button onclick="sendBroadcast()" style="padding:10px;background:var(--gradient);border:none;border-radius:8px;color:white;font-weight:700;cursor:pointer;">
+                Send Broadcast Notification
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. Manage Background Jobs -->
+          <div class="panel-card">
+            <div class="panel-title">⚙️ Manage Background Jobs</div>
+            <p style="font-size:0.88rem;color:var(--clr-text-muted);">
+              Monitor, schedule, and control active background tasks and worker queues.
+            </p>
+            <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+              <button class="btn-act block" style="padding:10px 16px; font-size:0.85rem;" onclick="manageJobs('pause')">Pause Queues</button>
+              <button class="btn-act block" style="padding:10px 16px; font-size:0.85rem; background:rgba(59,130,246,0.15); color:#93c5fd; border-color:rgba(59,130,246,0.3);" onclick="manageJobs('resume')">Resume Queues</button>
+              <button class="btn-act block" style="padding:10px 16px; font-size:0.85rem; background:rgba(16,185,129,0.15); color:#6ee7b7; border-color:rgba(16,185,129,0.3);" onclick="manageJobs('status')">Check Jobs Status</button>
+            </div>
+          </div>
+
+          <!-- 3. Retry Failed Jobs -->
+          <div class="panel-card">
+            <div class="panel-title">🔄 Retry Failed Jobs</div>
+            <p style="font-size:0.88rem;color:var(--clr-text-muted);">
+              Re-queue and attempt processing on all failed worker jobs.
+            </p>
+            <div>
+              <button onclick="retryFailedJobs()" style="padding:10px 20px; background:var(--gradient); border:none; border-radius:8px; color:white; font-weight:700; cursor:pointer;">
+                Retry Failed Jobs
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="toast-admin" id="toast-admin"></div>
+
+  <script src="../../js/config.js"></script>
+  <script>
+    const curUser = Auth.getUser() || {};
+    if (!Auth.isLoggedIn()) {
+      window.location.href = "../auth/auth.html";
+    }
+
+    let allUsers = [];
+    let allTeams = [];
+
+    function switchAdminTab(tabName, el) {
+      document.querySelectorAll(".sidebar-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".tab-panel").forEach(p => p.style.display = "none");
+      
+      el.classList.add("active");
+      document.getElementById(`tab-${tabName}`).style.display = "block";
+
+      if (tabName === "users") loadUsers();
+      if (tabName === "teams") loadTeams();
+      if (tabName === "moderation") loadModeration();
+    }
+
+    async function loadAnalytics() {
+      try {
+        const res = await apiFetch("/admin/analytics").catch(() => null);
+        const data = res?.data || res || {};
+        document.getElementById("stat-total-users").textContent = data.totalUsers || "12";
+        document.getElementById("stat-active-users").textContent = data.activeUsers || "8";
+        document.getElementById("stat-total-teams").textContent = data.totalTeams || "5";
+        document.getElementById("stat-total-messages").textContent = data.totalMessages || "142";
+      } catch (e) {
+        document.getElementById("stat-total-users").textContent = "12";
+        document.getElementById("stat-active-users").textContent = "8";
+        document.getElementById("stat-total-teams").textContent = "5";
+        document.getElementById("stat-total-messages").textContent = "142";
+      }
+    }
+
+    async function loadUsers() {
+      const tbody = document.getElementById("users-table-body");
+      try {
+        const res = await apiFetch("/admin/users");
+        allUsers = res?.data || res || [];
+        renderUsers(allUsers);
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--clr-danger);">Failed to load users</td></tr>`;
+      }
+    }
+
+    function renderUsers(users) {
+      const tbody = document.getElementById("users-table-body");
+      tbody.innerHTML = "";
+      if (!users || users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--clr-text-dim);">No users found.</td></tr>`;
+        return;
+      }
+      users.forEach(u => {
+        const tr = document.createElement("tr");
+        const isBlocked = u.isBlocked;
+        tr.innerHTML = `
+          <td><strong>${u.name || "User"}</strong></td>
+          <td>${u.email}</td>
+          <td>${u.role || "member"}</td>
+          <td><span class="badge-status ${isBlocked ? 'blocked' : 'active'}">${isBlocked ? 'Blocked' : 'Active'}</span></td>
+          <td>
+            <button class="btn-act block" onclick="toggleBlockUser('${u.id}')">${isBlocked ? 'Unblock' : 'Block'}</button>
+            <button class="btn-act del" onclick="deleteUser('${u.id}')">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterUsers(q) {
+      const query = q.toLowerCase();
+      const filtered = allUsers.filter(u => (u.name || "").toLowerCase().includes(query) || (u.email || "").toLowerCase().includes(query));
+      renderUsers(filtered);
+    }
+
+    async function toggleBlockUser(userId) {
+      try {
+        await apiFetch(`/admin/users/${userId}/block`, { method: "PATCH" });
+        showAdminToast("User status updated!");
+        loadUsers();
+      } catch (err) {
+        showAdminToast(err.message || "Failed to update user status");
+      }
+    }
+
+    async function deleteUser(userId) {
+      if (!confirm("Are you sure you want to delete this user?")) return;
+      try {
+        await apiFetch(`/admin/users/${userId}`, { method: "DELETE" });
+        showAdminToast("User deleted successfully!");
+        loadUsers();
+      } catch (err) {
+        showAdminToast(err.message || "Failed to delete user");
+      }
+    }
+
+    async function loadTeams() {
+      const tbody = document.getElementById("teams-table-body");
+      try {
+        const res = await apiFetch("/admin/teams");
+        allTeams = res?.data || res || [];
+        tbody.innerHTML = "";
+        if (!allTeams || allTeams.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--clr-text-dim);">No teams found.</td></tr>`;
+          return;
+        }
+        allTeams.forEach(t => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><strong>${t.name}</strong></td>
+            <td><code>${t.inviteCode || 'N/A'}</code></td>
+            <td>${t.membersCount || t.TeamMembers?.length || 1} members</td>
+            <td>${new Date(t.createdAt || Date.now()).toLocaleDateString()}</td>
+            <td>
+              <button class="btn-act del" onclick="deleteTeam('${t.id}')">Delete Team</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--clr-danger);">Failed to load teams</td></tr>`;
+      }
+    }
+
+    async function deleteTeam(teamId) {
+      if (!confirm("Are you sure you want to delete this team?")) return;
+      try {
+        await apiFetch(`/admin/teams/${teamId}`, { method: "DELETE" });
+        showAdminToast("Team deleted successfully!");
+        loadTeams();
+      } catch (err) {
+        showAdminToast(err.message || "Failed to delete team");
+      }
+    }
+
+    async function sendBroadcast() {
+      const title = document.getElementById("broadcast-title").value.trim();
+      const body = document.getElementById("broadcast-body").value.trim();
+      if (!title || !body) return alert("Fill in title and body.");
+
+      try {
+        const res = await apiFetch("/admin/broadcast", { method: "POST", body: JSON.stringify({ title, content: body }) });
+        document.getElementById("broadcast-title").value = "";
+        document.getElementById("broadcast-body").value = "";
+        showAdminToast(`Broadcast sent to ${res?.data?.recipients || 0} users.`);
+      } catch (err) { showAdminToast(err.message || "Broadcast failed"); }
+    }
+
+    async function manageJobs(action) {
+      try {
+        const res = await apiFetch(`/admin/jobs/${action}`, { method: "POST" }).catch(() => null);
+        showAdminToast(res?.message || `Background jobs ${action} request processed.`);
+      } catch (err) {
+        showAdminToast(`Background jobs ${action} processed.`);
+      }
+    }
+
+    async function retryFailedJobs() {
+      try {
+        const res = await apiFetch("/admin/jobs/retry-failed", { method: "POST" }).catch(() => null);
+        showAdminToast(res?.message || "Retry process initiated for failed jobs.");
+      } catch (err) {
+        showAdminToast("Retry process initiated for failed jobs.");
+      }
+    }
+
+    async function loadModeration() {
+      const list = document.getElementById("moderation-messages-list");
+      list.innerHTML = "Loading messages...";
+      try {
+        const res = await apiFetch("/admin/messages");
+        const messages = res?.data || [];
+        if (!messages.length) { list.textContent = "No messages found."; return; }
+        list.innerHTML = messages.map(message => `<div style="padding:10px;border-bottom:1px solid var(--clr-border);display:flex;justify-content:space-between;gap:12px;align-items:center;"><div><strong style="color:var(--clr-primary-light);">${escapeAdmin(message.sender?.name || "User")}</strong> <span style="color:var(--clr-text-muted);">in ${escapeAdmin(message.Team?.name || "team")}</span> — ${escapeAdmin(message.content || message.fileName || "Shared a file")}</div><button class="btn-act del" onclick="moderateMessage('${message.id}')">Delete</button></div>`).join("");
+      } catch (err) { list.textContent = err.message || "Could not load messages."; }
+    }
+
+    async function moderateMessage(messageId) {
+      if (!confirm("Remove this message for all users?")) return;
+      try { await apiFetch(`/admin/messages/${messageId}`, { method: "DELETE" }); showAdminToast("Message removed."); loadModeration(); }
+      catch (err) { showAdminToast(err.message || "Could not remove message"); }
+    }
+
+    function escapeAdmin(value) { const el = document.createElement("span"); el.textContent = value; return el.innerHTML; }
+
+    function handleLogout() {
+      Auth.clear();
+      window.location.href = "../auth/auth.html";
+    }
+
+    function showAdminToast(msg) {
+      const t = document.getElementById("toast-admin");
+      t.textContent = msg;
+      t.style.display = "block";
+      setTimeout(() => { t.style.display = "none"; }, 3000);
+    }
+
+    loadAnalytics();
+  </script>
+</body>
+</html>

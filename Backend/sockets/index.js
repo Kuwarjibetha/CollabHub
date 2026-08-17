@@ -33,6 +33,7 @@ function initSocket(httpServer) {
    // connection handler
   io.on("connection", (socket) => {
     console.log(`New socket connection: ${socket.user.userId}`);
+    socket.join(`user:${socket.user.userId}`);
 
     registerChatHandlers(io, socket);
     registerCallHandlers(io, socket);  

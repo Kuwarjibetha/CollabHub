@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CollabHub — Login / Sign Up</title>
+  <meta name="description" content="Login or create your CollabHub account to start collaborating with your team." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/style.css" />
+  <link rel="stylesheet" href="../../css/auth.css" />
+</head>
+<body class="auth-body">
+
+  <!-- Back to home -->
+  <a href="../../index.html" id="back-btn">
+    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Back
+  </a>
+
+  <!-- Animated background orbs -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="auth-container">
+    <!-- Brand -->
+    <div class="auth-brand">
+      <a href="../../index.html" class="brand-logo">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <rect width="32" height="32" rx="10" fill="url(#lg1)"/>
+          <path d="M8 20V12l6 4-6 4z" fill="white"/>
+          <path d="M16 12h8v8h-8z" fill="white" opacity="0.7"/>
+          <defs>
+            <linearGradient id="lg1" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#7C3AED"/>
+              <stop offset="1" stop-color="#3B82F6"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </a>
+      <h1 class="brand-name">CollabHub</h1>
+      <p class="brand-tagline">Real-time collaboration, reimagined.</p>
+    </div>
+
+    <!-- Auth Card -->
+    <div class="auth-card glass">
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button id="tab-login" class="auth-tab active" onclick="switchTab('login')">Login</button>
+        <button id="tab-signup" class="auth-tab" onclick="switchTab('signup')">Sign Up</button>
+        <div class="tab-indicator" id="tab-indicator"></div>
+      </div>
+
+      <!-- Error / Success Banner -->
+      <div class="alert-banner" id="alert-banner" style="display:none;"></div>
+
+      <!-- Login Form -->
+      <form id="form-login" class="auth-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="login-email">Email</label>
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/></svg>
+            </span>
+            <input type="email" id="login-email" placeholder="you@example.com" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </span>
+            <input type="password" id="login-password" placeholder="••••••••" required />
+          </div>
+        </div>
+        <button type="submit" class="btn-primary" id="btn-login">
+          <span class="btn-text">Sign In</span>
+          <div class="btn-spinner" style="display:none;"></div>
+        </button>
+        <p style="text-align:center;font-size:0.82rem;color:var(--clr-text-dim);">
+          Don't have an account?
+          <span onclick="switchTab('signup')" style="color:var(--clr-primary-light);cursor:pointer;font-weight:600;">Sign up free →</span>
+        </p>
+      </form>
+
+      <!-- Signup Form -->
+      <form id="form-signup" class="auth-form" style="display:none;" onsubmit="handleSignup(event)">
+        <div class="form-group">
+          <label for="signup-name">Full Name</label>
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            </span>
+            <input type="text" id="signup-name" placeholder="John Doe" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="signup-email">Email</label>
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/></svg>
+            </span>
+            <input type="email" id="signup-email" placeholder="you@example.com" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="signup-password">Password</label>
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </span>
+            <input type="password" id="signup-password" placeholder="Min 6 characters" required minlength="6" />
+          </div>
+        </div>
+        <button type="submit" class="btn-primary" id="btn-signup">
+          <span class="btn-text">Create Account</span>
+          <div class="btn-spinner" style="display:none;"></div>
+        </button>
+        <p style="text-align:center;font-size:0.82rem;color:var(--clr-text-dim);">
+          Already have an account?
+          <span onclick="switchTab('login')" style="color:var(--clr-primary-light);cursor:pointer;font-weight:600;">Login →</span>
+        </p>
+      </form>
+    </div>
+
+    <p class="auth-footer">© 2025 CollabHub. All rights reserved.</p>
+  </div>
+
+  <style>
+    #back-btn {
+      position: fixed; top: 20px; left: 20px; z-index: 10;
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.85rem; font-weight: 500;
+      color: var(--clr-text-muted);
+      padding: 8px 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--clr-border);
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    #back-btn:hover {
+      color: var(--clr-text);
+      border-color: rgba(124,58,237,0.4);
+    }
+    .brand-logo {
+      display: flex; align-items: center; justify-content: center;
+      text-decoration: none;
+    }
+  </style>
+
+  <script>
+    // ============================================================
+    // CONFIG — inline here so it works with file:// protocol too
+    // ============================================================
+    const CONFIG = { API_BASE: "http://localhost:5000/api/v1" };
+
+    const Auth = {
+      getToken:   ()          => localStorage.getItem("token"),
+      getUser:    ()          => JSON.parse(localStorage.getItem("user") || "null"),
+      setSession: (token, user) => {
+        localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(user));
+      },
+      clear: () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      },
+      isLoggedIn: () => !!localStorage.getItem("token"),
+    };
+
+    async function apiFetch(endpoint, options = {}) {
+      const token = Auth.getToken();
+      const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      let res, data;
+      try {
+        res  = await fetch(`${CONFIG.API_BASE}${endpoint}`, { ...options, headers });
+        data = await res.json();
+      } catch (networkErr) {
+        throw new Error("Cannot connect to server. Make sure backend is running on port 5000.");
+      }
+
+      if (!res.ok) {
+        throw new Error(data?.message || `Server error (${res.status})`);
+      }
+      return data;
+    }
+
+    // If logged in, show notice banner so user can switch accounts or go to dashboard
+    if (Auth.isLoggedIn()) {
+      document.addEventListener('DOMContentLoaded', () => {
+        const u = Auth.getUser() || {};
+        const banner = document.createElement('div');
+        banner.style.cssText = 'padding:10px 14px;background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.3);border-radius:10px;margin-bottom:16px;font-size:0.85rem;color:#a78bfa;display:flex;align-items:center;justify-content:space-between;';
+        banner.innerHTML = `
+          <span>Currently logged in as <strong>${u.email || u.name || 'User'}</strong></span>
+          <a href="../user/dashboard.html" style="font-weight:700;color:#fff;text-decoration:underline;">Dashboard →</a>
+        `;
+        const card = document.querySelector('.auth-card');
+        if (card) card.insertBefore(banner, card.firstChild);
+      });
+    }
+
+    // ============================================================
+    // TAB SWITCHING
+    // ============================================================
+    function switchTab(tab) {
+      const indicator  = document.getElementById('tab-indicator');
+      const loginForm  = document.getElementById('form-login');
+      const signupForm = document.getElementById('form-signup');
+      const tabLogin   = document.getElementById('tab-login');
+      const tabSignup  = document.getElementById('tab-signup');
+
+      loginForm.style.display  = tab === 'login'  ? 'flex' : 'none';
+      signupForm.style.display = tab === 'signup' ? 'flex' : 'none';
+      tabLogin.classList.toggle('active',  tab === 'login');
+      tabSignup.classList.toggle('active', tab === 'signup');
+      indicator.classList.toggle('right',  tab === 'signup');
+      clearAlert();
+    }
+
+    // Read URL param (?tab=signup)
+    const tab = new URLSearchParams(window.location.search).get('tab');
+    if (tab === 'signup') switchTab('signup');
+
+    // ============================================================
+    // ALERTS
+    // ============================================================
+    function showAlert(msg, type = 'error') {
+      const b = document.getElementById('alert-banner');
+      b.textContent = msg;
+      b.className = `alert-banner ${type}`;
+      b.style.display = 'block';
+    }
+    function clearAlert() {
+      document.getElementById('alert-banner').style.display = 'none';
+    }
+
+    function setLoading(id, on) {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.disabled = on;
+      btn.querySelector('.btn-text').style.display   = on ? 'none'  : 'inline';
+      btn.querySelector('.btn-spinner').style.display = on ? 'block' : 'none';
+    }
+
+    // ============================================================
+    // LOGIN
+    // Backend: POST /auth/login → { success, data: { user, token } }
+    // ============================================================
+    async function handleLogin(e) {
+      e.preventDefault();
+      clearAlert();
+      const email    = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      if (!email || !password) return showAlert('Please fill in all fields.');
+
+      setLoading('btn-login', true);
+      try {
+        const res = await apiFetch('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password }),
+        });
+
+        // Handle all possible response shapes from backend
+        const token = res?.data?.token || res?.token || res?.accessToken;
+        const user  = res?.data?.user  || res?.user  || { email };
+
+        if (!token) throw new Error('Token not received. Please try again.');
+
+        Auth.setSession(token, user);
+        showAlert('Login successful! Redirecting...', 'success');
+        setTimeout(() => window.location.href = '../user/dashboard.html', 900);
+
+      } catch (err) {
+        showAlert(err.message || 'Login failed.');
+      } finally {
+        setLoading('btn-login', false);
+      }
+    }
+
+    // ============================================================
+    // SIGNUP
+    // Backend: POST /auth/signup → { success, message, data: user }
+    // ============================================================
+    async function handleSignup(e) {
+      e.preventDefault();
+      clearAlert();
+      const name     = document.getElementById('signup-name').value.trim();
+      const email    = document.getElementById('signup-email').value.trim();
+      const password = document.getElementById('signup-password').value;
+
+      if (!name || !email || !password) return showAlert('Please fill in all fields.');
+      if (password.length < 6) return showAlert('Password must be at least 6 characters.');
+
+      setLoading('btn-signup', true);
+      try {
+        await apiFetch('/auth/signup', {
+          method: 'POST',
+          body: JSON.stringify({ name, email, password }),
+        });
+        showAlert('Account created! Please login now.', 'success');
+        setTimeout(() => switchTab('login'), 1500);
+
+      } catch (err) {
+        showAlert(err.message || 'Signup failed. Try again.');
+      } finally {
+        setLoading('btn-signup', false);
+      }
+    }
+  </script>
+</body>
+</html>

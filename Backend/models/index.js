@@ -4,6 +4,8 @@ const Team = require("./Team/Team");
 const TeamMember = require("./TeamMember/TeamMember");
 const Message = require("./Message/Message");
 const Notification = require("./Notification/Notification");  
+const MessageReaction = require("./MessageReaction/MessageReaction");
+const DirectMessage = require("./DirectMessage/DirectMessage");
 
 
 User.belongsToMany(Team, { through: TeamMember, foreignKey: "userId" }); // Ek User multiple Teams me ho sakta hai, aur woh connection TeamMember table se hota hai
@@ -26,6 +28,13 @@ Team.hasMany(Message, { foreignKey: "teamId" });
 
 
 User.hasMany(Message, { foreignKey: "senderId" });
+Message.hasMany(MessageReaction, { foreignKey: "messageId", as: "reactions", onDelete: "CASCADE" });
+MessageReaction.belongsTo(Message, { foreignKey: "messageId" });
+MessageReaction.belongsTo(User, { foreignKey: "userId", as: "user" });
+User.hasMany(MessageReaction, { foreignKey: "userId" });
+
+DirectMessage.belongsTo(User, { foreignKey: "senderId", as: "sender" });
+DirectMessage.belongsTo(User, { foreignKey: "recipientId", as: "recipient" });
 
 // 👇 2. naya — Notification associations
 Notification.belongsTo(User, { foreignKey: "userId" });   // Har notification ka ek recipient (User) hota hai
@@ -37,5 +46,7 @@ module.exports = {
   Team,
   TeamMember,
   Message,
-  Notification  
+  Notification,
+  MessageReaction,
+  DirectMessage,
 };

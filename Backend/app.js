@@ -2,10 +2,11 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const http = require("http");
-const { sequelize } = require("./models");
+const { sequelize, User } = require("./models");
 const v1Routes = require("./routes/v1");
 const initSocket = require("./sockets");
 const { startWorkflows } = require("./workflow");
+const { runMigrations } = require("./config/migrator");
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use("/api/v1", v1Routes);
 
 const httpServer = http.createServer(app);
 const io = initSocket(httpServer);
+app.set("io", io);
 
 
 
@@ -27,8 +29,14 @@ async function start() {
     await sequelize.authenticate();
     console.log("Database connected...");
 
-    await sequelize.sync({ alter: true });
+    await runMigrations(sequelize);
+    await sequelize.sync();
     console.log("Database synced...");
+
+    // Set this once in .env when an administrator account is needed.
+    if (process.env.ADMIN_EMAIL) {
+      await User.update({ role: "admin" }, { where: { email: process.env.ADMIN_EMAIL } });
+    }
 
     startWorkflows();
 

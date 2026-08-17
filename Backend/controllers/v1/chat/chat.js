@@ -13,6 +13,13 @@ async function sendMessageController(req, res) {
 
     const message = await chatService.sendMessage(req.user.userId, { teamId, content, replyToId });
 
+    // Emit real-time Socket.io event to all members in team room
+    const io = req.app.get("io");
+    if (io) {
+      io.to(teamId).emit("newMessage", message);
+      io.to(teamId).emit("new-message", message);
+    }
+
     return res.status(201).json({
       success: true,
       message: "Message sent",
@@ -26,10 +33,29 @@ async function sendMessageController(req, res) {
   }
 }
 
+async function toggleReactionController(req, res) {
+  try {
+    const { messageId } = req.params;
+    const { emoji } = req.body;
+    if (!emoji) return res.status(400).json({ success: false, message: "Emoji is required" });
+    const result = await chatService.toggleReaction(req.user.userId, messageId, emoji);
+    const io = req.app.get("io");
+    if (io) io.to(result.teamId).emit("message-reactions", result);
+    return res.status(200).json({ success: true, data: result });
+  } catch (err) { return res.status(err.statusCode || 500).json({ success: false, message: err.message || "Something went wrong" }); }
+}
 
+async function markReadController(req, res) {
+  try {
+    await chatService.markTeamRead(req.user.userId, req.params.teamId);
+    return res.status(200).json({ success: true, message: "Team marked as read" });
+  } catch (err) { return res.status(err.statusCode || 500).json({ success: false, message: err.message || "Something went wrong" }); }
+}
 
-
-
+async function getUnreadCountsController(req, res) {
+  try { return res.status(200).json({ success: true, data: await chatService.getUnreadCounts(req.user.userId) }); }
+  catch (err) { return res.status(err.statusCode || 500).json({ success: false, message: err.message || "Something went wrong" }); }
+}
 
 async function getChatHistoryController(req, res) {
   try {
@@ -54,11 +80,6 @@ async function getChatHistoryController(req, res) {
   }
 }
 
-
-
-
-
-
 async function editMessageController(req, res) {
   try {
     const { messageId } = req.params;
@@ -69,6 +90,11 @@ async function editMessageController(req, res) {
     }
 
     const message = await chatService.editMessage(req.user.userId, messageId, { content });
+
+    const io = req.app.get("io");
+    if (io && message.teamId) {
+      io.to(message.teamId).emit("message-edited", { id: messageId, content });
+    }
 
     return res.status(200).json({
       success: true,
@@ -83,14 +109,16 @@ async function editMessageController(req, res) {
   }
 }
 
-
-
-
 async function deleteMessageController(req, res) {
   try {
     const { messageId } = req.params;
 
     const result = await chatService.deleteMessage(req.user.userId, messageId);
+
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("message-deleted", { id: messageId });
+    }
 
     return res.status(200).json({
       success: true,
@@ -103,9 +131,6 @@ async function deleteMessageController(req, res) {
     });
   }
 }
-
-
-
 
 async function sendFileMessageController(req, res) {
   try {
@@ -131,6 +156,12 @@ async function sendFileMessageController(req, res) {
       fileName: req.file.originalname,
     });
 
+    const io = req.app.get("io");
+    if (io) {
+      io.to(teamId).emit("newMessage", message);
+      io.to(teamId).emit("new-message", message);
+    }
+
     return res.status(201).json({
       success: true,
       message: "File message sent",
@@ -145,10 +176,14 @@ async function sendFileMessageController(req, res) {
 }
 
 
+
 module.exports = {
   sendMessageController,
   getChatHistoryController,
   sendFileMessageController, 
   editMessageController,
   deleteMessageController,
+  toggleReactionController,
+  markReadController,
+  getUnreadCountsController,
 };

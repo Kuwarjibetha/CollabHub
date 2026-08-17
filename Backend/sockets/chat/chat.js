@@ -29,18 +29,22 @@ function registerChatHandlers(io, socket) {
   });
 
   // typeing indic
-  socket.on("typing", ({ teamId }) => {
+  const typingStart = ({ teamId }) => {
     socket.to(teamId).emit("userTyping", {
       userId: socket.user.userId,
     });
-  });
+  };
+  socket.on("typing", typingStart);
+  socket.on("typing-start", typingStart);
 
 
-  socket.on("stopTyping", ({ teamId }) => {
+  const typingStop = ({ teamId }) => {
     socket.to(teamId).emit("userStoppedTyping", {
       userId: socket.user.userId,
     });
-  });
+  };
+  socket.on("stopTyping", typingStop);
+  socket.on("typing-stop", typingStop);
 
   // discon
   socket.on("disconnect", () => {

@@ -1,8 +1,9 @@
 const jwt = require("jsonwebtoken") // for token generation
+const { User } = require("../../models");
 
 
 // verify the token
-function verifyToken(req,res,next){
+async function verifyToken(req,res,next){
 
     const authHeader = req.headers.authorization;   // header se authorization value nikalo 
     if (!authHeader || !authHeader.startsWith("Bearer ")){   // 
@@ -16,7 +17,9 @@ function verifyToken(req,res,next){
 
     try{
         const decoded = jwt.verify(token, process.env.JWT_SECRET); // token verify karo ki jwt secreat wahi hai jo sign karte time use hua tha
-        req.user = decoded; 
+        const user = await User.findByPk(decoded.userId, { attributes: ["id", "isBlocked", "role"] });
+        if (!user || user.isBlocked) return res.status(403).json({success:false, message:"This account is blocked"});
+        req.user = { ...decoded, role: user.role };
 
         next();
     }catch(err){

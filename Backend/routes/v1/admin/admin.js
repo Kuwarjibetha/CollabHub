@@ -11,6 +11,8 @@ const {
   deleteTeamController,
   deleteAnyMessageController,
   getAnalyticsController,
+  getAllMessagesController,
+  broadcastController,
 } = require("../../../controllers/v1/admin");
 
 
@@ -22,6 +24,8 @@ router.get("/teams", verifyToken, requireAdmin, getAllTeamsController);
 router.delete("/teams/:teamId", verifyToken, requireAdmin, deleteTeamController);
 
 router.delete("/messages/:messageId", verifyToken, requireAdmin, deleteAnyMessageController);
+router.get("/messages", verifyToken, requireAdmin, getAllMessagesController);
 router.get("/analytics", verifyToken, requireAdmin, getAnalyticsController);
+router.post("/broadcast", verifyToken, requireAdmin, broadcastController);
 
 module.exports = router;

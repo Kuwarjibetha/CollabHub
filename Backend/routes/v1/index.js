@@ -7,6 +7,7 @@ const teamRoutes = require("./team");
 const chatRoutes = require("./chat");   
 const adminRoutes = require("./admin");
 const notificationRoutes = require("./notification");
+const directRoutes = require("./direct");
 
 router.use("/auth", authRoutes);
 router.use("/admin", adminRoutes);
@@ -14,5 +15,6 @@ router.use("/user", userRoutes);
 router.use("/team", teamRoutes);
 router.use("/chat", chatRoutes); 
 router.use("/notification", notificationRoutes);
+router.use("/direct", directRoutes);
 
 module.exports = router;

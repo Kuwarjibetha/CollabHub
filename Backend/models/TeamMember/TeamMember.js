@@ -21,6 +21,10 @@ const TeamMember = sequelize.define(
       type: DataTypes.ENUM("admin", "member"),
       defaultValue: "member",
     },
+    lastReadAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     tableName: "team_members",
