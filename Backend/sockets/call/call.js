@@ -72,22 +72,33 @@ function registerCallHandlers(io, socket) {
     await notifyTeam(io, teamId, "team-call-started", payload, socket.user.userId);
     await notifyTeam(io, teamId, "meeting-status-changed", payload);
 
-    // Save persistent in-app notification in DB
+    // Save persistent in-app notification in DB & emit to recipient users
     try {
       const members = await TeamMember.findAll({ where: { teamId }, attributes: ["userId"] });
-      const notifPromises = members
-        .filter((m) => m.userId !== socket.user.userId)
-        .map((m) =>
-          Notification.create({
-            userId: m.userId,
-            type: "CALL",
-            title: "Live Video Meeting",
-            body: `${callerName || "A teammate"} started a live meeting in ${teamName || "your team"}. Click to join!`,
-            data: { teamId, action: "join-meeting" },
-            isRead: false,
-          }).catch(() => {})
-        );
+      const recipients = members.filter((m) => m.userId !== socket.user.userId);
+      
+      const notifPromises = recipients.map((m) =>
+        Notification.create({
+          userId: m.userId,
+          type: "call",
+          title: `📹 Live Meeting: ${teamName || "Team"}`,
+          content: `${callerName || "A teammate"} started a live meeting in ${teamName || "your team"}. Click to join!`,
+          relatedId: teamId,
+          isRead: false,
+        }).catch(() => {})
+      );
       await Promise.all(notifPromises);
+
+      // Emit real-time notification event to user personal rooms
+      recipients.forEach((m) => {
+        io.to(`user:${m.userId}`).emit("notification", {
+          type: "call",
+          title: `📹 Live Meeting: ${teamName || "Team"}`,
+          content: `${callerName || "A teammate"} started a live meeting in ${teamName || "your team"}. Click to join!`,
+          relatedId: teamId,
+          createdAt: new Date().toISOString(),
+        });
+      });
     } catch (e) {
       console.warn("Could not save call notification in DB:", e.message);
     }
