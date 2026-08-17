@@ -1,6 +1,6 @@
-const { TeamMember } = require("../../models");
+const { TeamMember, Notification } = require("../../models");
 
-// In-memory state is enough for a single Socket.io server.  It lets us alert
+// In-memory state is enough for a single Socket.io server. It lets us alert
 // every team member and automatically clears a meeting when its last attendee leaves.
 const activeCalls = new Map();
 const socketToUser = new Map();
@@ -14,7 +14,13 @@ async function notifyTeam(io, teamId, event, payload, excludeUserId = null) {
 function registerCallHandlers(io, socket) {
   const callRooms = new Set();
 
-  // join call
+  // Send active calls status on demand
+  socket.on("get-active-calls", () => {
+    const liveTeamIds = Array.from(activeCalls.keys()).filter((tId) => activeCalls.get(tId)?.size > 0);
+    socket.emit("active-calls-list", { liveTeamIds });
+  });
+
+  // join call / rejoin call
   socket.on("joinCall", async ({ teamId }) => {
     const membership = await TeamMember.findOne({ where: { teamId, userId: socket.user.userId } });
     if (!membership) return socket.emit("errorMessage", { message: "You are not a member of this team" });
@@ -40,23 +46,54 @@ function registerCallHandlers(io, socket) {
       socketId: socket.id,
     });
 
+    // Broadcast meeting is live to all team members
+    await notifyTeam(io, teamId, "meeting-status-changed", {
+      teamId,
+      isLive: true,
+      participantCount: activeCalls.get(teamId)?.size || 1,
+    });
+
     console.log(`User ${socket.user.userId} joined call room: ${callRoom}`);
   });
 
   socket.on("call-start", async ({ teamId, teamName, callerName }) => {
     const membership = await TeamMember.findOne({ where: { teamId, userId: socket.user.userId } });
     if (!membership) return;
-    await notifyTeam(io, teamId, "team-call-started", {
+
+    const payload = {
       teamId,
       teamName: teamName || "Your team",
       callerName: callerName || "A teammate",
       callerId: socket.user.userId,
-    }, socket.user.userId);
+      isLive: true,
+      participantCount: activeCalls.get(teamId)?.size || 1,
+    };
+
+    await notifyTeam(io, teamId, "team-call-started", payload, socket.user.userId);
+    await notifyTeam(io, teamId, "meeting-status-changed", payload);
+
+    // Save persistent in-app notification in DB
+    try {
+      const members = await TeamMember.findAll({ where: { teamId }, attributes: ["userId"] });
+      const notifPromises = members
+        .filter((m) => m.userId !== socket.user.userId)
+        .map((m) =>
+          Notification.create({
+            userId: m.userId,
+            type: "CALL",
+            title: "Live Video Meeting",
+            body: `${callerName || "A teammate"} started a live meeting in ${teamName || "your team"}. Click to join!`,
+            data: { teamId, action: "join-meeting" },
+            isRead: false,
+          }).catch(() => {})
+        );
+      await Promise.all(notifPromises);
+    } catch (e) {
+      console.warn("Could not save call notification in DB:", e.message);
+    }
   });
 
-
-
-  // webrtc
+  // webrtc signaling
   socket.on("callOffer", ({ toSocketId, offer }) => {
     io.to(toSocketId).emit("callOffer", {
       fromSocketId: socket.id,
@@ -67,7 +104,6 @@ function registerCallHandlers(io, socket) {
   socket.on("call-offer", ({ to, offer }) => {
     io.to(to).emit("callOffer", { fromSocketId: socket.id, from: socket.id, fromUserId: socket.user.userId, offer });
   });
-  // webtrc ans
   socket.on("callAnswer", ({ toSocketId, answer }) => {
     io.to(toSocketId).emit("callAnswer", {
       fromSocketId: socket.id,
@@ -76,7 +112,6 @@ function registerCallHandlers(io, socket) {
   });
   socket.on("call-answer", ({ to, answer }) => io.to(to).emit("callAnswer", { fromSocketId: socket.id, from: socket.id, answer }));
 
-  // ice candi
   socket.on("iceCandidate", ({ toSocketId, candidate }) => {
     io.to(toSocketId).emit("iceCandidate", {
       fromSocketId: socket.id,
@@ -85,9 +120,6 @@ function registerCallHandlers(io, socket) {
   });
   socket.on("ice-candidate", ({ to, candidate }) => io.to(to).emit("iceCandidate", { fromSocketId: socket.id, from: socket.id, candidate }));
 
-
-
-  // mute vid tog
   socket.on("toggleMedia", ({ teamId, audioEnabled, videoEnabled }) => {
     const callRoom = `call-${teamId}`;
     socket.to(callRoom).emit("participantMediaChanged", {
@@ -96,8 +128,6 @@ function registerCallHandlers(io, socket) {
       videoEnabled,
     });
   });
-
-
 
   // call leave
   socket.on("leaveCall", async ({ teamId }) => {
@@ -110,6 +140,9 @@ function registerCallHandlers(io, socket) {
       if (participants.size === 0) {
         activeCalls.delete(teamId);
         await notifyTeam(io, teamId, "team-call-ended", { teamId });
+        await notifyTeam(io, teamId, "meeting-status-changed", { teamId, isLive: false });
+      } else {
+        await notifyTeam(io, teamId, "meeting-status-changed", { teamId, isLive: true, participantCount: participants.size });
       }
     }
     socketToUser.delete(socket.id);
@@ -121,6 +154,7 @@ function registerCallHandlers(io, socket) {
 
     console.log(`User ${socket.user.userId} left call room: ${callRoom}`);
   });
+
   socket.on("call-end", async ({ teamId }) => {
     const callRoom = `call-${teamId}`;
     socket.to(callRoom).emit("userLeftCall", { userId: socket.user.userId, socketId: socket.id });
@@ -132,19 +166,30 @@ function registerCallHandlers(io, socket) {
       if (participants.size === 0) {
         activeCalls.delete(teamId);
         await notifyTeam(io, teamId, "team-call-ended", { teamId });
+        await notifyTeam(io, teamId, "meeting-status-changed", { teamId, isLive: false });
+      } else {
+        await notifyTeam(io, teamId, "meeting-status-changed", { teamId, isLive: true, participantCount: participants.size });
       }
     }
     socketToUser.delete(socket.id);
   });
 
-
   // disconnect
-  socket.on("disconnect", () => {
-    callRooms.forEach((callRoom) => {
+  socket.on("disconnect", async () => {
+    callRooms.forEach(async (callRoom) => {
       socket.to(callRoom).emit("userLeftCall", { userId: socket.user.userId, socketId: socket.id });
       const teamId = callRoom.replace("call-", "");
       const participants = activeCalls.get(teamId);
-      if (participants) { participants.delete(socket.id); if (participants.size === 0) activeCalls.delete(teamId); }
+      if (participants) {
+        participants.delete(socket.id);
+        if (participants.size === 0) {
+          activeCalls.delete(teamId);
+          await notifyTeam(io, teamId, "team-call-ended", { teamId });
+          await notifyTeam(io, teamId, "meeting-status-changed", { teamId, isLive: false });
+        } else {
+          await notifyTeam(io, teamId, "meeting-status-changed", { teamId, isLive: true, participantCount: participants.size });
+        }
+      }
     });
     socketToUser.delete(socket.id);
     console.log(`User ${socket.user.userId} disconnected from call`);
