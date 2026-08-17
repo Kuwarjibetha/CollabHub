@@ -325,11 +325,18 @@
 
   <div class="toast-admin" id="toast-admin"></div>
 
-  <script src="../../js/config.js"></script>
+  <script src="../../js/config.js?v=2.2"></script>
   <script>
     const curUser = Auth.getUser() || {};
     if (!Auth.isLoggedIn()) {
-      window.location.href = "../auth/auth.html";
+      window.location.href = "../auth/auth.html?redirect=admin";
+    }
+
+    // Strict Super Admin Access Guard
+    const userRole = curUser.role;
+    if (userRole !== "SUPER_ADMIN" && userRole !== "admin") {
+      alert("Access Denied: Only Super Admins can access this Control Console. Team Admins and regular members do not have permission.");
+      window.location.href = "../user/dashboard.html";
     }
 
     let allUsers = [];

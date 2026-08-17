@@ -284,8 +284,23 @@
 
         Auth.setSession(token, user);
         showAlert('Login successful! Redirecting...', 'success');
-        setTimeout(() => window.location.href = '../user/dashboard.html', 900);
 
+        const params = new URLSearchParams(window.location.search);
+        const redirectToAdmin = params.get('redirect') === 'admin';
+        const userRole = user?.role;
+
+        if (redirectToAdmin) {
+          if (userRole === 'SUPER_ADMIN' || userRole === 'admin') {
+            setTimeout(() => window.location.href = '../admin/dashboard.html', 800);
+            return;
+          } else {
+            showAlert('Notice: You logged in as a standard member. Opening User Dashboard...', 'info');
+            setTimeout(() => window.location.href = '../user/dashboard.html', 1200);
+            return;
+          }
+        }
+
+        setTimeout(() => window.location.href = '../user/dashboard.html', 900);
       } catch (err) {
         showAlert(err.message || 'Login failed.');
       } finally {
