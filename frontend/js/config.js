@@ -22,21 +22,31 @@ const Auth = {
   isLoggedIn: () => !!localStorage.getItem("token"),
 };
 
-// Generic fetch wrapper
+// Generic fetch wrapper with 8s timeout so page never hangs forever
 async function apiFetch(endpoint, options = {}) {
   const token = Auth.getToken();
   const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
   if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  // Abort fetch after 8 seconds so UI is never blocked indefinitely
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
 
   let res, data;
   try {
     res = await fetch(`${CONFIG.API_BASE}${endpoint}`, {
       ...options,
       headers,
+      signal: controller.signal,
     });
     data = await res.json();
   } catch (err) {
+    if (err.name === "AbortError") {
+      throw new Error("Request timed out. Backend may be starting up. Please wait and try again.");
+    }
     throw new Error("Backend server is starting up. Please wait 15-30 seconds and try again.");
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   if (!res.ok) throw new Error(data?.message || "Request failed");
