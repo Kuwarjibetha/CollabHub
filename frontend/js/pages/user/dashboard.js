@@ -1897,7 +1897,15 @@ function escapeHtml(str) {
 let currentNotifFilter = "all";
 let globalNotificationsList = [];
 
-async function openNotificationsModal() {
+async function openNotificationsModal(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
+  const navItem = document.getElementById("nav-notifications");
+  if (navItem) navItem.classList.add("active");
+
   openModal("modal-notifications");
   await fetchAndRenderNotifications();
 }
@@ -1910,17 +1918,25 @@ function filterNotifs(filter, btn) {
 }
 
 async function fetchAndRenderNotifications() {
-  let notifications = [];
+  let dbNotifications = [];
   try {
     const res = await apiFetch("/notification");
-    notifications = res?.data || res?.notifications || (Array.isArray(res) ? res : []);
+    dbNotifications = res?.data || res?.notifications || (Array.isArray(res) ? res : []);
   } catch (err) {
     console.warn("Could not fetch notifications from backend:", err);
   }
 
-  if (!notifications || notifications.length === 0) {
-    notifications = generateFallbackGroupNotifications();
-  }
+  // Combine live team updates + DB notifications
+  const fallbackList = generateFallbackGroupNotifications();
+  const combinedMap = new Map();
+  dbNotifications.forEach(n => combinedMap.set(n.id, n));
+  fallbackList.forEach(n => {
+    if (!combinedMap.has(n.id)) {
+      combinedMap.set(n.id, n);
+    }
+  });
+
+  const notifications = Array.from(combinedMap.values()).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
   globalNotificationsList = notifications;
   renderNotificationsList(notifications);
