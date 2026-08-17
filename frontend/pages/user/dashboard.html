@@ -628,6 +628,32 @@
     </div>
   </div>
 
+  <!-- Leave Team Custom Confirmation Modal -->
+  <div class="modal-overlay hidden" id="modal-leave-team-confirm">
+    <div class="modal" style="max-width:400px;width:92%;">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:10px;background:rgba(239,68,68,0.15);color:var(--clr-danger);display:flex;align-items:center;justify-content:center;">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          </div>
+          <h3 style="font-size:1.05rem;font-weight:700;">Leave Team</h3>
+        </div>
+        <button class="btn-icon modal-close" onclick="closeModal('modal-leave-team-confirm')">✕</button>
+      </div>
+      <div class="modal-body" style="padding:16px 0 8px;">
+        <p style="font-size:0.9rem;color:var(--clr-text-muted);line-height:1.6;" id="leave-team-msg">
+          Are you sure you want to leave this team? You will need an invite code to rejoin.
+        </p>
+      </div>
+      <div class="modal-footer" style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn-secondary" onclick="closeModal('modal-leave-team-confirm')">Cancel</button>
+        <button class="btn-danger" id="btn-confirm-leave-team" onclick="confirmLeaveTeamAction()" style="padding:9px 18px;font-size:0.875rem;">
+          Leave Team
+        </button>
+      </div>
+    </div>
+  </div>
+
 
   <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
   <script>
