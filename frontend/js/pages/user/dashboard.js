@@ -920,27 +920,48 @@ async function joinTeam() {
   }
 }
 
-async function leaveCurrentTeam() {
+function leaveCurrentTeam() {
   if (!currentTeam) return;
-  if (!confirm(`Are you sure you want to leave team "${currentTeam.name}"?`)) return;
+  const msgEl = document.getElementById("leave-team-msg");
+  if (msgEl) {
+    msgEl.innerHTML = `Are you sure you want to leave <strong>"${currentTeam.name}"</strong>? You will lose access to its messages.`;
+  }
+  openModal("modal-leave-team-confirm");
+}
+
+async function confirmLeaveTeamAction() {
+  if (!currentTeam) {
+    closeModal("modal-leave-team-confirm");
+    return;
+  }
+  const btn = document.getElementById("btn-confirm-leave-team");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Leaving...";
+  }
 
   try {
     await apiFetch(`/team/${currentTeam.id}/leave`, { method: "DELETE" });
     showToast("Left Team", `You left "${currentTeam.name}".`, "info");
+    currentTeam = null;
+    const welcome = document.getElementById("chat-welcome");
+    if (welcome) welcome.style.display = "flex";
+    const active = document.getElementById("chat-active");
+    if (active) active.style.display = "none";
+    const startCallBtn = document.getElementById("btn-start-call");
+    if (startCallBtn) startCallBtn.style.display = "none";
+    closeModal("modal-leave-team-confirm");
+    closeModal("modal-team-admin");
+    await loadTeams();
   } catch (err) {
     showToast("Error", err.message || "Could not leave team.", "error");
-    return;
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Leave Team";
+    }
+    closeModal("modal-leave-team-confirm");
   }
-
-  currentTeam = null;
-  const welcome = document.getElementById("chat-welcome");
-  if (welcome) welcome.style.display = "flex";
-  const active = document.getElementById("chat-active");
-  if (active) active.style.display = "none";
-  const startCallBtn = document.getElementById("btn-start-call");
-  if (startCallBtn) startCallBtn.style.display = "none";
-  closeModal("modal-team-admin");
-  await loadTeams();
 }
 
 async function deleteCurrentTeam() {
