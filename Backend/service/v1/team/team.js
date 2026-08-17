@@ -75,17 +75,30 @@ async function leaveTeam(userId, teamId){
         throw error;
     }
 
-    if (membership.role === "admin") {
-        const adminCount = await TeamMember.count({ where: { teamId, role: "admin" } });
-        if (adminCount === 1) {
-            const error = new Error("Assign another admin before leaving this team");
-            error.statusCode = 400;
-            throw error;
+    const team = await Team.findByPk(teamId);
+    const memberCount = await TeamMember.count({ where: { teamId } });
+
+    // If only 1 member left in the team, delete the team completely
+    if (memberCount <= 1 && team) {
+        return await deleteTeamByOwner(userId, teamId);
+    }
+
+    // If owner/creator is leaving and other members exist, reassign createdBy and admin role to next member
+    if (team && String(team.createdBy) === String(userId)) {
+        const { Op } = require("sequelize");
+        const nextMember = await TeamMember.findOne({
+            where: { teamId, userId: { [Op.ne]: userId } }
+        });
+        if (nextMember) {
+            team.createdBy = nextMember.userId;
+            await team.save();
+            nextMember.role = "TEAM_ADMIN";
+            await nextMember.save();
         }
     }
 
     await membership.destroy();
-    return {message: "Left the team successfully"};
+    return { message: "Left the team successfully" };
 }
 
 async function requireTeamAdmin(userId, teamId) {
@@ -97,7 +110,7 @@ async function requireTeamAdmin(userId, teamId) {
 }
 
 async function updateMemberRole(requesterId, teamId, memberId, role) {
-  if (!["admin", "member"].includes(role)) { const error = new Error("Role must be admin or member"); error.statusCode = 400; throw error; }
+  if (!["admin", "member", "TEAM_ADMIN", "MEMBER"].includes(role)) { const error = new Error("Role must be valid"); error.statusCode = 400; throw error; }
   await requireTeamAdmin(requesterId, teamId);
   const member = await TeamMember.findOne({ where: { teamId, userId: memberId } });
   if (!member) { const error = new Error("Member not found"); error.statusCode = 404; throw error; }
@@ -115,6 +128,21 @@ async function removeMember(requesterId, teamId, memberId) {
 async function deleteTeamByOwner(userId, teamId) {
   const team = await Team.findByPk(teamId);
   if (!team) { const error = new Error("Team not found"); error.statusCode = 404; throw error; }
+
+  try {
+    const { Message, MessageReaction } = require("../../../models");
+    if (Message) {
+      const messages = await Message.findAll({ where: { teamId }, attributes: ["id"] });
+      const messageIds = messages.map(m => m.id);
+      if (messageIds.length > 0 && MessageReaction) {
+        await MessageReaction.destroy({ where: { messageId: messageIds } });
+      }
+      await Message.destroy({ where: { teamId } });
+    }
+  } catch (e) {
+    console.warn("Message cleanup notice during delete:", e.message);
+  }
+
   await TeamMember.destroy({ where: { teamId } });
   await team.destroy();
   return { message: "Team deleted" };
