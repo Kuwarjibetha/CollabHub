@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const { verifyToken } = require("../../../middleware/auth");
-const { requireAdmin } = require("../../../middleware/role");
+const { requireSuperAdmin } = require("../../../middleware/role");
 const {
   getAllUsersController,
   toggleUserBlockController,
@@ -15,17 +15,17 @@ const {
   broadcastController,
 } = require("../../../controllers/v1/admin");
 
+// All /admin routes strictly require authentication and SUPER_ADMIN global role
+router.get("/users", verifyToken, requireSuperAdmin, getAllUsersController);
+router.patch("/users/:userId/block", verifyToken, requireSuperAdmin, toggleUserBlockController);
+router.delete("/users/:userId", verifyToken, requireSuperAdmin, deleteUserController);
 
-router.get("/users", verifyToken, requireAdmin, getAllUsersController);
-router.patch("/users/:userId/block", verifyToken, requireAdmin, toggleUserBlockController);
-router.delete("/users/:userId", verifyToken, requireAdmin, deleteUserController);
+router.get("/teams", verifyToken, requireSuperAdmin, getAllTeamsController);
+router.delete("/teams/:teamId", verifyToken, requireSuperAdmin, deleteTeamController);
 
-router.get("/teams", verifyToken, requireAdmin, getAllTeamsController);
-router.delete("/teams/:teamId", verifyToken, requireAdmin, deleteTeamController);
-
-router.delete("/messages/:messageId", verifyToken, requireAdmin, deleteAnyMessageController);
-router.get("/messages", verifyToken, requireAdmin, getAllMessagesController);
-router.get("/analytics", verifyToken, requireAdmin, getAnalyticsController);
-router.post("/broadcast", verifyToken, requireAdmin, broadcastController);
+router.delete("/messages/:messageId", verifyToken, requireSuperAdmin, deleteAnyMessageController);
+router.get("/messages", verifyToken, requireSuperAdmin, getAllMessagesController);
+router.get("/analytics", verifyToken, requireSuperAdmin, getAnalyticsController);
+router.post("/broadcast", verifyToken, requireSuperAdmin, broadcastController);
 
 module.exports = router;

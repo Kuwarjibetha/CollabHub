@@ -13,7 +13,7 @@ async function createTeam(userId, {name}){
     await TeamMember.create({
         userId,
         teamId: team.id,
-        role: "admin"
+        role: "TEAM_ADMIN"
     });
 
     return team;
@@ -41,7 +41,7 @@ async function joinTeam(userId,{inviteCode}){
 
     await TeamMember.create({
         userId, teamId: team.id,
-        role: "member",
+        role: "MEMBER",
     });
     return team;
 }
@@ -55,10 +55,14 @@ async function getMyTeams(userId){
 
     return memberships
         .filter((m) => m && m.Team)
-        .map((m)=>({
-            ...m.Team.toJSON(),
-            myRole: m.role,
-        }));
+        .map((m)=> {
+            const isOwner = String(m.Team.createdBy) === String(userId);
+            const isTeamAdmin = isOwner || m.role === "TEAM_ADMIN" || m.role === "admin";
+            return {
+                ...m.Team.toJSON(),
+                myRole: isTeamAdmin ? "TEAM_ADMIN" : "MEMBER",
+            };
+        });
 }
 
 // Leave team
