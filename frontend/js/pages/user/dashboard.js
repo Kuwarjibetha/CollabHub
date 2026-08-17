@@ -2117,6 +2117,15 @@ document.addEventListener("click", (e) => {
   }
 });
 
+// Explicit window function bindings for inline handlers
+window.openNotificationsModal = openNotificationsModal;
+window.filterNotifs = filterNotifs;
+window.markAllNotificationsRead = markAllNotificationsRead;
+window.markNotificationRead = markNotificationRead;
+window.openNotificationAction = openNotificationAction;
+window.openModal = openModal;
+window.closeModal = closeModal;
+
 // ==========================================
 // START
 // ==========================================
