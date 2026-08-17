@@ -920,8 +920,15 @@ async function joinTeam() {
   }
 }
 
-function leaveCurrentTeam() {
-  if (!currentTeam) return;
+function leaveCurrentTeam(e) {
+  if (e && e.stopPropagation) {
+    e.stopPropagation();
+    e.preventDefault();
+  }
+  if (!currentTeam) {
+    showToast("Select Team", "Please select a team first.", "info");
+    return;
+  }
   const msgEl = document.getElementById("leave-team-msg");
   if (msgEl) {
     msgEl.innerHTML = `Are you sure you want to leave <strong>"${currentTeam.name}"</strong>? You will lose access to its messages.`;
@@ -929,7 +936,11 @@ function leaveCurrentTeam() {
   openModal("modal-leave-team-confirm");
 }
 
-async function confirmLeaveTeamAction() {
+async function confirmLeaveTeamAction(e) {
+  if (e && e.stopPropagation) {
+    e.stopPropagation();
+    e.preventDefault();
+  }
   if (!currentTeam) {
     closeModal("modal-leave-team-confirm");
     return;
@@ -1542,12 +1553,17 @@ function openModal(id) {
   if (!el) return;
   el.classList.remove("hidden");
   el.style.display = "flex";
+  el.style.visibility = "visible";
+  el.style.opacity = "1";
+  el.style.pointerEvents = "all";
 }
 function closeModal(id) {
   const el = document.getElementById(id);
   if (!el) return;
   el.classList.add("hidden");
   el.style.display = "none";
+  el.style.visibility = "hidden";
+  el.style.pointerEvents = "none";
 }
 
 function setModalLoading(btnId, loading) {
