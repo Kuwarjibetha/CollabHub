@@ -1708,8 +1708,17 @@ function setNavActive(tab) {
   document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
   const el = document.getElementById(`nav-${tab}`);
   if (el) el.classList.add("active");
+
+  const teamsView = document.getElementById("sidebar-teams-view");
+  const notifsView = document.getElementById("sidebar-notifications-view");
+
   if (tab === "notifications") {
-    openNotificationsModal();
+    if (teamsView) teamsView.style.display = "none";
+    if (notifsView) notifsView.style.display = "flex";
+    fetchAndRenderNotifications();
+  } else {
+    if (notifsView) notifsView.style.display = "none";
+    if (teamsView) teamsView.style.display = "flex";
   }
 }
 
@@ -1912,8 +1921,13 @@ async function openNotificationsModal(e) {
 
 function filterNotifs(filter, btn) {
   currentNotifFilter = filter;
-  document.querySelectorAll("#notif-filter-buttons .notif-filter-tab").forEach(b => b.classList.remove("active"));
-  if (btn) btn.classList.add("active");
+  document.querySelectorAll(".notif-filter-tab").forEach(b => {
+    if (b.getAttribute("onclick") && b.getAttribute("onclick").includes(`'${filter}'`)) {
+      b.classList.add("active");
+    } else {
+      b.classList.remove("active");
+    }
+  });
   renderNotificationsList(globalNotificationsList);
 }
 
@@ -1943,10 +1957,11 @@ async function fetchAndRenderNotifications() {
 }
 
 function renderNotificationsList(notifications) {
-  const container = document.getElementById("notifications-list");
-  const countLabel = document.getElementById("notif-count-label");
+  const sidebarContainer = document.getElementById("notifications-sidebar-list");
+  const modalContainer = document.getElementById("notifications-list");
+  const sidebarCountLabel = document.getElementById("sidebar-notif-count-label");
+  const modalCountLabel = document.getElementById("notif-count-label");
   const badge = document.getElementById("notif-badge");
-  if (!container) return;
 
   const totalUnread = notifications.filter(n => !n.isRead).length;
   if (badge) {
@@ -1968,89 +1983,96 @@ function renderNotificationsList(notifications) {
     filtered = notifications.filter(n => n.type === "call" || n.type === "video_call");
   }
 
-  if (countLabel) {
-    countLabel.textContent = `${totalUnread} Unread • Showing ${filtered.length} of ${notifications.length} notifications`;
-  }
+  const countText = `${totalUnread} Unread (${filtered.length} shown)`;
+  if (sidebarCountLabel) sidebarCountLabel.textContent = countText;
+  if (modalCountLabel) modalCountLabel.textContent = `${totalUnread} Unread • Showing ${filtered.length} of ${notifications.length}`;
 
-  container.innerHTML = "";
-  if (filtered.length === 0) {
-    container.innerHTML = `
-      <div style="text-align:center;padding:40px 0;color:var(--clr-text-dim);">
-        <svg width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="opacity:0.4;margin-bottom:8px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-        <p style="font-size:0.85rem;">No notifications in this category.</p>
-      </div>
-    `;
-    return;
-  }
-
-  filtered.forEach(n => {
-    const item = document.createElement("div");
-    const isRead = n.isRead;
-    
-    let typeIcon = "💬";
-    let typeBadge = "Message";
-    let bgStyle = isRead ? 'rgba(255,255,255,0.03)' : 'rgba(26,115,232,0.12)';
-    let borderStyle = isRead ? 'rgba(255,255,255,0.06)' : 'rgba(26,115,232,0.3)';
-    let actionBtn = "";
-
-    if (n.type === "call" || n.type === "video_call") {
-      typeIcon = "📹";
-      typeBadge = "Live Call";
-      bgStyle = isRead ? 'rgba(255,255,255,0.03)' : 'rgba(234,67,53,0.12)';
-      borderStyle = isRead ? 'rgba(255,255,255,0.06)' : 'rgba(234,67,53,0.35)';
-      actionBtn = `<button onclick="openNotificationAction('${n.id}', '${n.relatedId || ''}', 'call')" style="padding:5px 12px;font-size:0.75rem;background:#ea4335;color:white;border:none;border-radius:6px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">📹 Join Call</button>`;
-    } else if (n.type === "mention") {
-      typeIcon = "🏷️";
-      typeBadge = "Mention";
-      bgStyle = isRead ? 'rgba(255,255,255,0.03)' : 'rgba(251,191,36,0.12)';
-      borderStyle = isRead ? 'rgba(255,255,255,0.06)' : 'rgba(251,191,36,0.35)';
-      actionBtn = `<button onclick="openNotificationAction('${n.id}', '${n.relatedId || ''}', 'chat')" style="padding:5px 12px;font-size:0.75rem;background:var(--clr-primary);color:white;border:none;border-radius:6px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">💬 Open Chat</button>`;
-    } else if (n.type === "message" || n.type === "chat") {
-      typeIcon = "💬";
-      typeBadge = "Message";
-      actionBtn = `<button onclick="openNotificationAction('${n.id}', '${n.relatedId || ''}', 'chat')" style="padding:5px 12px;font-size:0.75rem;background:rgba(255,255,255,0.08);color:white;border:1px solid var(--clr-border);border-radius:6px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">💬 View</button>`;
-    } else {
-      typeIcon = "👥";
-      typeBadge = "Team Update";
-      actionBtn = `<button onclick="openNotificationAction('${n.id}', '${n.relatedId || ''}', 'team')" style="padding:5px 12px;font-size:0.75rem;background:rgba(255,255,255,0.08);color:white;border:1px solid var(--clr-border);border-radius:6px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">👥 Open Team</button>`;
+  const renderToContainer = (container) => {
+    if (!container) return;
+    container.innerHTML = "";
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:36px 0;color:var(--clr-text-dim);">
+          <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="opacity:0.35;margin-bottom:6px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+          <p style="font-size:0.8rem;">No notifications in this category.</p>
+        </div>
+      `;
+      return;
     }
 
-    item.style.cssText = `
-      padding: 12px 14px;
-      border-radius: 12px;
-      background: ${bgStyle};
-      border: 1px solid ${borderStyle};
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      transition: all 0.2s ease;
-    `;
+    filtered.forEach(n => {
+      const item = document.createElement("div");
+      const isRead = n.isRead;
+      
+      let typeIcon = "💬";
+      let typeBadge = "Message";
+      let bgStyle = isRead ? 'rgba(255,255,255,0.03)' : 'rgba(26,115,232,0.12)';
+      let borderStyle = isRead ? 'rgba(255,255,255,0.06)' : 'rgba(26,115,232,0.3)';
+      let actionBtn = "";
 
-    const timeStr = n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now";
+      if (n.type === "call" || n.type === "video_call") {
+        typeIcon = "📹";
+        typeBadge = "Live Call";
+        bgStyle = isRead ? 'rgba(255,255,255,0.03)' : 'rgba(234,67,53,0.12)';
+        borderStyle = isRead ? 'rgba(255,255,255,0.06)' : 'rgba(234,67,53,0.35)';
+        actionBtn = `<button onclick="openNotificationAction('${n.id}', '${n.relatedId || ''}', 'call')" style="padding:4px 10px;font-size:0.72rem;background:#ea4335;color:white;border:none;border-radius:6px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">📹 Join Call</button>`;
+      } else if (n.type === "mention") {
+        typeIcon = "🏷️";
+        typeBadge = "Mention";
+        bgStyle = isRead ? 'rgba(255,255,255,0.03)' : 'rgba(251,191,36,0.12)';
+        borderStyle = isRead ? 'rgba(255,255,255,0.06)' : 'rgba(251,191,36,0.35)';
+        actionBtn = `<button onclick="openNotificationAction('${n.id}', '${n.relatedId || ''}', 'chat')" style="padding:4px 10px;font-size:0.72rem;background:var(--clr-primary);color:white;border:none;border-radius:6px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">💬 Open Chat</button>`;
+      } else if (n.type === "message" || n.type === "chat") {
+        typeIcon = "💬";
+        typeBadge = "Message";
+        actionBtn = `<button onclick="openNotificationAction('${n.id}', '${n.relatedId || ''}', 'chat')" style="padding:4px 10px;font-size:0.72rem;background:rgba(255,255,255,0.08);color:white;border:1px solid var(--clr-border);border-radius:6px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">💬 View</button>`;
+      } else {
+        typeIcon = "👥";
+        typeBadge = "Team Update";
+        actionBtn = `<button onclick="openNotificationAction('${n.id}', '${n.relatedId || ''}', 'team')" style="padding:4px 10px;font-size:0.72rem;background:rgba(255,255,255,0.08);color:white;border:1px solid var(--clr-border);border-radius:6px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">👥 Open</button>`;
+      }
 
-    item.innerHTML = `
-      <div style="font-size:1.15rem;padding:6px;background:rgba(255,255,255,0.06);border-radius:8px;flex-shrink:0;">${typeIcon}</div>
-      <div style="flex:1;overflow:hidden;">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span style="font-size:0.84rem;font-weight:700;color:var(--clr-text);">${escapeHtml(n.title || "Notification")}</span>
-            <span style="font-size:0.65rem;padding:1px 5px;border-radius:4px;background:rgba(255,255,255,0.08);color:var(--clr-text-muted);font-weight:700;">${typeBadge}</span>
+      item.style.cssText = `
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: ${bgStyle};
+        border: 1px solid ${borderStyle};
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        transition: all 0.2s ease;
+      `;
+
+      const timeStr = n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now";
+
+      item.innerHTML = `
+        <div style="font-size:1.1rem;padding:5px;background:rgba(255,255,255,0.06);border-radius:6px;flex-shrink:0;">${typeIcon}</div>
+        <div style="flex:1;overflow:hidden;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+            <div style="display:flex;align-items:center;gap:4px;overflow:hidden;">
+              <span style="font-size:0.8rem;font-weight:700;color:var(--clr-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(n.title || "Notification")}</span>
+              <span style="font-size:0.6rem;padding:1px 4px;border-radius:4px;background:rgba(255,255,255,0.08);color:var(--clr-text-muted);font-weight:700;flex-shrink:0;">${typeBadge}</span>
+            </div>
+            <span style="font-size:0.65rem;color:var(--clr-text-dim);white-space:nowrap;">${timeStr}</span>
           </div>
-          <span style="font-size:0.7rem;color:var(--clr-text-dim);white-space:nowrap;">${timeStr}</span>
+          <div style="font-size:0.75rem;color:var(--clr-text-muted);margin-top:2px;line-height:1.35;word-break:break-word;">${escapeHtml(n.content || n.message || "Activity update")}</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
+            ${actionBtn}
+            ${!isRead ? `<button onclick="markNotificationRead('${n.id}')" title="Mark as read" style="background:none;border:none;color:var(--clr-text-muted);font-weight:600;font-size:0.68rem;cursor:pointer;padding:2px 4px;">Mark Read</button>` : ''}
+          </div>
         </div>
-        <div style="font-size:0.8rem;color:var(--clr-text-muted);margin-top:3px;line-height:1.35;">${escapeHtml(n.content || n.message || "Activity update")}</div>
-        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
-          ${actionBtn}
-          ${!isRead ? `<button onclick="markNotificationRead('${n.id}')" title="Mark as read" style="background:none;border:none;color:var(--clr-text-muted);font-weight:600;font-size:0.72rem;cursor:pointer;padding:2px 6px;">Mark Read</button>` : ''}
-        </div>
-      </div>
-    `;
+      `;
 
-    container.appendChild(item);
-  });
+      container.appendChild(item);
+    });
+  };
+
+  renderToContainer(sidebarContainer);
+  renderToContainer(modalContainer);
 }
 
 async function openNotificationAction(notifId, teamId, actionType) {
+  setNavActive("chat");
   closeModal("modal-notifications");
   if (teamId) {
     const team = allTeams.find(t => String(t.id) === String(teamId));
