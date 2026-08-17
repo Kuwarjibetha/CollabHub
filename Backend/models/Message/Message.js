@@ -19,7 +19,7 @@ const Message = sequelize.define(
     },
     content: {
       type: DataTypes.TEXT,
-      allowNull: false,
+      allowNull: true,
     },
     replyToId: {
       type: DataTypes.UUID,
@@ -33,7 +33,20 @@ const Message = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    fileUrl: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    fileType: {
+      type: DataTypes.ENUM("image", "video", "document"),
+      allowNull: true,
+    },
+    fileName: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
   },
+
   {
     tableName: "messages",
     timestamps: true,
