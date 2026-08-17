@@ -1059,7 +1059,7 @@ function leaveCurrentTeam(e) {
   }
   const msgEl = document.getElementById("leave-team-msg");
   if (msgEl) {
-    msgEl.innerHTML = `Are you sure you want to leave <strong>"${currentTeam.name}"</strong>? You will lose access to its messages.`;
+    msgEl.innerHTML = `Are you sure you want to leave <strong>"${escapeHtml(currentTeam.name)}"</strong>? You will lose access to its messages and meetings.`;
   }
   openModal("modal-leave-team-confirm");
 }
@@ -1079,19 +1079,28 @@ async function confirmLeaveTeamAction(e) {
     btn.textContent = "Leaving...";
   }
 
+  const teamIdToLeave = currentTeam.id;
+  const teamNameToLeave = currentTeam.name;
+
   try {
-    await apiFetch(`/team/${currentTeam.id}/leave`, { method: "DELETE" });
-    showToast("Left Team", `You left "${currentTeam.name}".`, "info");
+    await apiFetch(`/team/${teamIdToLeave}/leave`, { method: "DELETE" });
+    showToast("Left Team", `You left "${teamNameToLeave}".`, "success");
     currentTeam = null;
-    const welcome = document.getElementById("chat-welcome");
-    if (welcome) welcome.style.display = "flex";
-    const active = document.getElementById("chat-active");
-    if (active) active.style.display = "none";
-    const startCallBtn = document.getElementById("btn-start-call");
-    if (startCallBtn) startCallBtn.style.display = "none";
     closeModal("modal-leave-team-confirm");
     closeModal("modal-team-admin");
+    
+    // Reload teams list
     await loadTeams();
+    if (allTeams && allTeams.length > 0) {
+      selectTeam(allTeams[0]);
+    } else {
+      const welcome = document.getElementById("chat-welcome");
+      if (welcome) welcome.style.display = "flex";
+      const active = document.getElementById("chat-active");
+      if (active) active.style.display = "none";
+      const startCallBtn = document.getElementById("btn-start-call");
+      if (startCallBtn) startCallBtn.style.display = "none";
+    }
   } catch (err) {
     showToast("Error", err.message || "Could not leave team.", "error");
   } finally {
@@ -2088,25 +2097,28 @@ async function openNotificationAction(notifId, teamId, actionType) {
 
 function generateFallbackGroupNotifications() {
   const list = [];
+  const readIds = JSON.parse(localStorage.getItem("read_fallback_notifications") || "[]");
   if (allTeams && allTeams.length > 0) {
     allTeams.forEach(t => {
+      const id = "team-" + t.id;
       list.push({
-        id: "team-" + t.id,
+        id: id,
         type: "team_update",
         title: `Team: ${t.name}`,
         content: `You are a member of "${t.name}". Invite code: ${t.inviteCode || t.code || 'N/A'}`,
         relatedId: t.id,
-        isRead: false,
+        isRead: readIds.includes(id),
         createdAt: t.createdAt || new Date().toISOString()
       });
     });
   } else {
+    const id = "welcome-notif";
     list.push({
-      id: "welcome-notif",
+      id: id,
       type: "message",
       title: "Welcome to CollabHub",
       content: "Join or create a team to receive live message alerts, calls, mentions, and notifications.",
-      isRead: false,
+      isRead: readIds.includes(id),
       createdAt: new Date().toISOString()
     });
   }
@@ -2114,15 +2126,33 @@ function generateFallbackGroupNotifications() {
 }
 
 async function markNotificationRead(id) {
-  try {
-    await apiFetch(`/notification/${id}/read`, { method: "PATCH" });
-  } catch (e) {
-    console.warn("Mark read failed:", e);
+  if (String(id).startsWith("team-") || id === "welcome-notif") {
+    const readIds = JSON.parse(localStorage.getItem("read_fallback_notifications") || "[]");
+    if (!readIds.includes(id)) {
+      readIds.push(id);
+      localStorage.setItem("read_fallback_notifications", JSON.stringify(readIds));
+    }
+  } else {
+    try {
+      await apiFetch(`/notification/${id}/read`, { method: "PATCH" });
+    } catch (e) {
+      console.warn("Mark read failed:", e);
+    }
   }
   fetchAndRenderNotifications();
 }
 
 async function markAllNotificationsRead() {
+  const readIds = JSON.parse(localStorage.getItem("read_fallback_notifications") || "[]");
+  if (globalNotificationsList) {
+    globalNotificationsList.forEach(n => {
+      if ((String(n.id).startsWith("team-") || n.id === "welcome-notif") && !readIds.includes(n.id)) {
+        readIds.push(n.id);
+      }
+    });
+  }
+  localStorage.setItem("read_fallback_notifications", JSON.stringify(readIds));
+
   try {
     await apiFetch("/notification/read-all", { method: "PATCH" });
     showToast("Notifications", "All notifications marked as read", "success");
@@ -2140,6 +2170,10 @@ document.addEventListener("click", (e) => {
 });
 
 // Explicit window function bindings for inline handlers
+window.leaveCurrentTeam = leaveCurrentTeam;
+window.confirmLeaveTeamAction = confirmLeaveTeamAction;
+window.setNavActive = setNavActive;
+window.filterTeams = filterTeams;
 window.openNotificationsModal = openNotificationsModal;
 window.filterNotifs = filterNotifs;
 window.markAllNotificationsRead = markAllNotificationsRead;
