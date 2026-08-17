@@ -271,7 +271,7 @@ function connectSocket() {
   socket.on("user-online", (userId) => { onlineUsers.add(userId); updateMembersUI(); });
   socket.on("user-offline", (userId) => { onlineUsers.delete(userId); updateMembersUI(); });
 
-  // WebRTC signaling
+  // WebRTC signaling & Meeting Live Status
   socket.on("callOffer", handleIncomingCall);
   socket.on("call-offer", handleIncomingCall);
   socket.on("callAnswer", handleCallAnswer);
@@ -283,11 +283,30 @@ function connectSocket() {
   socket.on("user-left-call", (data) => removePeer(typeof data === "object" ? (data.socketId || data.userId) : data));
   socket.on("team-call-started", showTeamCallAlert);
   socket.on("team-call-ended", ({ teamId }) => {
+    updateTeamLiveBadge(teamId, false);
     if (pendingTeamCall?.teamId === teamId) {
       pendingTeamCall = null;
-      document.getElementById("incoming-call").classList.add("hidden");
+      document.getElementById("incoming-call")?.classList.add("hidden");
     }
   });
+
+  socket.on("meeting-status-changed", (data) => {
+    if (!data?.teamId) return;
+    updateTeamLiveBadge(data.teamId, data.isLive, data.participantCount);
+  });
+
+  socket.on("active-calls-list", ({ liveTeamIds }) => {
+    liveMeetingTeams.clear();
+    liveTeamIds?.forEach(id => liveMeetingTeams.add(String(id)));
+    if (allTeams && allTeams.length > 0) renderTeams(allTeams);
+    if (currentTeam) {
+      updateTeamLiveBadge(currentTeam.id, liveMeetingTeams.has(String(currentTeam.id)));
+    }
+  });
+
+  // Query live calls on connect
+  socket.emit("get-active-calls");
+
   socket.on("callParticipants", ({ participants }) => {
     participants?.forEach(({ socketId, userId }) => {
       if (socketId && userId) {
@@ -310,8 +329,60 @@ function connectSocket() {
 }
 
 // ==========================================
-// TEAMS
+// TEAMS & LIVE MEETING BADGES
 // ==========================================
+const liveMeetingTeams = new Set();
+
+function updateTeamLiveBadge(teamId, isLive, count = 1) {
+  if (isLive) {
+    liveMeetingTeams.add(String(teamId));
+  } else {
+    liveMeetingTeams.delete(String(teamId));
+  }
+
+  // Update Team Item in Sidebar
+  const item = document.getElementById(`team-item-${teamId}`);
+  if (item) {
+    let badge = item.querySelector(".badge-live");
+    if (isLive) {
+      if (!badge) {
+        badge = document.createElement("span");
+        badge.className = "badge-live";
+        badge.innerHTML = `<span class="badge-live-dot"></span> LIVE`;
+        item.appendChild(badge);
+      }
+    } else if (badge) {
+      badge.remove();
+    }
+  }
+
+  // Update Chat Header Live Banner if currentTeam is active
+  if (currentTeam && String(currentTeam.id) === String(teamId)) {
+    const banner = document.getElementById("team-live-meeting-banner");
+    const startCallBtn = document.getElementById("btn-start-call");
+    if (banner) {
+      banner.style.display = isLive ? "flex" : "none";
+      const sub = document.getElementById("live-meeting-subtext");
+      if (sub) sub.textContent = isLive ? `Meeting in progress with team members • Click Join to connect` : "";
+    }
+    if (startCallBtn) {
+      if (isLive) {
+        startCallBtn.innerHTML = `
+          <span class="badge-live-dot" style="margin-right:4px;"></span>
+          Join Meeting
+        `;
+        startCallBtn.style.background = "#ea4335";
+      } else {
+        startCallBtn.innerHTML = `
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82V15.18a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          New meeting
+        `;
+        startCallBtn.style.background = "var(--clr-primary)";
+      }
+    }
+  }
+}
+
 async function loadTeams() {
   try {
     const res = await apiFetch("/team/my-teams");
@@ -319,6 +390,9 @@ async function loadTeams() {
     renderTeams(allTeams);
     if (allTeams.length > 0 && !currentTeam) {
       selectTeam(allTeams[0]);
+    }
+    if (socket && socket.connected) {
+      socket.emit("get-active-calls");
     }
   } catch (err) {
     console.error("loadTeams error:", err);
@@ -340,6 +414,11 @@ function renderTeams(teams) {
   empty.style.display = "none";
 
   teams.forEach(team => {
+    const isLive = liveMeetingTeams.has(String(team.id));
+    const liveBadgeHtml = isLive
+      ? `<span class="badge-live"><span class="badge-live-dot"></span> LIVE</span>`
+      : "";
+
     const el = document.createElement("div");
     el.className = "team-item" + (currentTeam?.id === team.id ? " active" : "");
     el.id = `team-item-${team.id}`;
@@ -356,6 +435,7 @@ function renderTeams(teams) {
         <div class="team-name">${escapeHtml(name)}</div>
         <div class="team-code">${team.inviteCode || team.code || ""}</div>
       </div>
+      ${liveBadgeHtml}
     `;
     list.appendChild(el);
   });
@@ -387,8 +467,13 @@ async function selectTeam(team) {
   const chatActive = document.getElementById("chat-active");
   chatActive.style.display = "flex";
 
+  // Check and update live meeting status
+  const isLive = liveMeetingTeams.has(String(team.id));
+  updateTeamLiveBadge(team.id, isLive);
+
   // Show call button
-  document.getElementById("btn-start-call").style.display = "flex";
+  const startCallBtn = document.getElementById("btn-start-call");
+  if (startCallBtn) startCallBtn.style.display = "flex";
 
   // Join socket room
   if (socket) {
