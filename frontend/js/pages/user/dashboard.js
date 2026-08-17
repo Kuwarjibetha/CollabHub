@@ -1,14 +1,9 @@
-// ==========================================
-// CollabHub — Dashboard JS
-// Complete: Teams, Chat, Socket.io, WebRTC
-// ==========================================
 
-// Auth Guard
+
 if (!Auth.isLoggedIn()) {
   window.location.href = "../auth/auth.html";
 }
 
-// ---- State ----
 let socket = null;
 let currentTeam = null;
 let allTeams = [];
@@ -17,10 +12,9 @@ let onlineUsers = new Set();
 let typingTimer = null;
 let isTyping = false;
 
-// WebRTC
 let localStream = null;
-let peers = {};           // socketId -> RTCPeerConnection
-let peerMeta = {};        // socketId -> { userId, name }
+let peers = {};           
+let peerMeta = {};        
 let pinnedTileId = null;
 let callChatOpen = false;
 let callTimerInterval = null;
@@ -36,15 +30,11 @@ const API = CONFIG.API_BASE;
 const SOCKET_URL = CONFIG.SOCKET_URL;
 const user = Auth.getUser();
 
-// ==========================================
-// INIT
-// ==========================================
 async function init() {
   if (!user) return logout();
   initUI();
   connectSocket();
 
-  // Fallback: Hide loading screen within 2.5s max so user is never stuck
   const timeout = setTimeout(() => hideLoading(), 2500);
 
   try {
@@ -64,7 +54,6 @@ function initUI() {
   const email = currentUser.email || "";
   const initials = name.charAt(0).toUpperCase();
 
-  // Rail avatar
   const rail = document.getElementById("user-avatar-rail");
   if (rail) {
     if (currentUser.profilePic) {
@@ -77,7 +66,6 @@ function initUI() {
     }
   }
 
-  // Sidebar User Card
   const sideName = document.getElementById("sidebar-user-name");
   const sideEmail = document.getElementById("sidebar-user-email");
   const sideAvatar = document.getElementById("sidebar-user-avatar");
@@ -102,7 +90,6 @@ function updateAdminVisibility() {
   const currentUser = Auth.getUser() || user || {};
   const isSuperAdmin = currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'admin';
 
-  // Global Admin Panel in left rail / nav — only SUPER_ADMIN
   const adminBtn = document.getElementById("btn-admin-console");
   if (adminBtn) adminBtn.style.display = isSuperAdmin ? "flex" : "none";
 
@@ -224,12 +211,6 @@ function hideLoading() {
   document.getElementById("app-shell").style.display = "grid";
 }
 
-// ==========================================
-// SOCKET.IO
-// ==========================================
-// ==========================================
-// SOCKET.IO
-// ==========================================
 function connectSocket() {
   if (typeof io === "undefined") {
     console.warn("Socket.io client library not loaded yet.");
@@ -256,7 +237,6 @@ function connectSocket() {
     console.warn("Socket disconnected");
   });
 
-  // Chat & Notification events
   socket.off("newMessage").on("newMessage", handleNewMessage);
   socket.off("message-edited").on("message-edited", handleMessageEdited);
   socket.off("message-deleted").on("message-deleted", handleMessageDeleted);
@@ -267,11 +247,9 @@ function connectSocket() {
   socket.off("userTyping").on("userTyping", (data) => handleTypingEvent({ isTyping: true, userName: data?.userName || data?.name || "Someone", teamId: currentTeam?.id }));
   socket.off("userStoppedTyping").on("userStoppedTyping", () => handleTypingEvent({ isTyping: false }));
 
-  // Presence
   socket.on("user-online", (userId) => { onlineUsers.add(userId); updateMembersUI(); });
   socket.on("user-offline", (userId) => { onlineUsers.delete(userId); updateMembersUI(); });
 
-  // WebRTC signaling & Meeting Live Status
   socket.on("callOffer", handleIncomingCall);
   socket.on("call-offer", handleIncomingCall);
   socket.on("callAnswer", handleCallAnswer);
@@ -304,7 +282,6 @@ function connectSocket() {
     }
   });
 
-  // Query live calls on connect
   socket.emit("get-active-calls");
 
   socket.on("callParticipants", ({ participants }) => {
@@ -328,9 +305,6 @@ function connectSocket() {
   socket.on("message-reactions", ({ messageId, reactions }) => renderReactions(messageId, reactions));
 }
 
-// ==========================================
-// TEAMS & LIVE MEETING BADGES
-// ==========================================
 const liveMeetingTeams = new Set();
 
 function updateTeamLiveBadge(teamId, isLive, count = 1) {
@@ -340,7 +314,6 @@ function updateTeamLiveBadge(teamId, isLive, count = 1) {
     liveMeetingTeams.delete(String(teamId));
   }
 
-  // Update Team Item in Sidebar
   const item = document.getElementById(`team-item-${teamId}`);
   if (item) {
     let badge = item.querySelector(".badge-live");
@@ -356,7 +329,6 @@ function updateTeamLiveBadge(teamId, isLive, count = 1) {
     }
   }
 
-  // Update Chat Header Live Banner if currentTeam is active
   if (currentTeam && String(currentTeam.id) === String(teamId)) {
     const banner = document.getElementById("team-live-meeting-banner");
     const startCallBtn = document.getElementById("btn-start-call");
@@ -424,7 +396,6 @@ function renderTeams(teams) {
   const list = document.getElementById("teams-list");
   const empty = document.getElementById("teams-empty");
 
-  // Remove existing team items
   list.querySelectorAll(".team-item").forEach(el => el.remove());
 
   if (!teams || teams.length === 0) {
@@ -476,59 +447,47 @@ function filterTeams(query) {
 async function selectTeam(team) {
   currentTeam = team;
 
-  // Clear unread count for this team
   teamUnreadCounts[team.id] = 0;
   updateTeamUnreadBadge(team.id, 0);
 
-  // Update active state
   document.querySelectorAll(".team-item").forEach(el => el.classList.remove("active"));
   const el = document.getElementById(`team-item-${team.id}`);
   if (el) el.classList.add("active");
 
-  // Update header
   const name = team.name || "Unnamed";
   const initials = name.substring(0, 2).toUpperCase();
   document.getElementById("chat-team-name").textContent = name;
   document.getElementById("chat-team-icon").textContent = initials;
   document.getElementById("chat-team-meta").textContent = `Code: ${team.inviteCode || team.code || "N/A"}`;
 
-  // Show chat
   document.getElementById("chat-welcome").style.display = "none";
   const chatActive = document.getElementById("chat-active");
   chatActive.style.display = "flex";
 
-  // Check and update live meeting status
   const isLive = liveMeetingTeams.has(String(team.id));
   updateTeamLiveBadge(team.id, isLive);
 
-  // Show call button
   const startCallBtn = document.getElementById("btn-start-call");
   if (startCallBtn) startCallBtn.style.display = "flex";
 
-  // Join socket room
   if (socket) {
     socket.emit("joinRoom", team.id);
     socket.emit("join-team", team.id);
   }
 
-  // Update Admin Console shortcut button & banner visibility
   updateAdminVisibility();
 
-  // Load members + history
   await Promise.all([loadMembers(team.id), loadChatHistory(team.id)]);
   apiFetch(`/chat/${team.id}/read`, { method: "PATCH" }).catch(() => {});
 }
 
-// ==========================================
-// MEMBERS
-// ==========================================
 async function loadMembers(teamId) {
   try {
     const res = await apiFetch(`/team/${teamId}/members`).catch(() => null);
     const members = res?.data || res?.members || (Array.isArray(res) ? res : []);
     renderMembers(members);
   } catch (err) {
-    // Silently fail
+    
   }
 }
 
@@ -601,9 +560,6 @@ function updateMembersUI() {
   });
 }
 
-// ==========================================
-// CHAT HISTORY
-// ==========================================
 async function loadChatHistory(teamId) {
   const area = document.getElementById("messages-area");
   area.innerHTML = '<div style="text-align:center;color:var(--clr-text-dim);font-size:0.8rem;padding:20px;">Loading messages...</div>';
@@ -625,9 +581,6 @@ async function loadChatHistory(teamId) {
   }
 }
 
-// ==========================================
-// RENDER MESSAGE
-// ==========================================
 function renderMessage(msg, scroll = true, targetAreaId = "messages-area") {
   if (!msg) return;
   const area = document.getElementById(targetAreaId);
@@ -802,9 +755,6 @@ function scrollToBottom() {
   area.scrollTop = area.scrollHeight;
 }
 
-// ==========================================
-// SEND MESSAGE
-// ==========================================
 async function sendMessage() {
   const input = document.getElementById("chat-input");
   const content = input.value.trim();
@@ -838,7 +788,6 @@ function handleNewMessage(msg) {
   const teamName = targetTeam?.name || "Team";
   const senderName = msg.sender?.name || (getMemberName(msg.senderId) || "Teammate");
 
-  // Check if current user is @mentioned
   const userName = (Auth.getUser() || user)?.name || "";
   const isMentioned = !isOwn && userName && msg.content && msg.content.toLowerCase().includes(`@${userName.toLowerCase()}`);
 
@@ -853,7 +802,7 @@ function handleNewMessage(msg) {
       }
     }
   } else {
-    // Message received in another team
+    
     if (!isOwn) {
       teamUnreadCounts[msg.teamId] = (teamUnreadCounts[msg.teamId] || 0) + 1;
       updateTeamUnreadBadge(msg.teamId, teamUnreadCounts[msg.teamId]);
@@ -868,9 +817,6 @@ function handleNewMessage(msg) {
   }
 }
 
-// ==========================================
-// EDIT / DELETE MESSAGE
-// ==========================================
 async function editMessage(msgId, currentContent) {
   const newContent = prompt("Edit message:", currentContent);
   if (!newContent || newContent === currentContent) return;
@@ -914,9 +860,6 @@ function handleMessageDeleted(data) {
   if (el) el.remove();
 }
 
-// ==========================================
-// FILE UPLOAD
-// ==========================================
 async function handleFileSelect(event) {
   const file = event.target.files[0];
   if (!file || !currentTeam) return;
@@ -945,9 +888,6 @@ async function handleFileSelect(event) {
   }
 }
 
-// ==========================================
-// TYPING INDICATOR
-// ==========================================
 function handleTypingInput() {
   const input = document.getElementById("chat-input");
   autoResizeTextarea(input);
@@ -981,9 +921,6 @@ function handleTypingEvent(data) {
   }
 }
 
-// ==========================================
-// CHAT KEYDOWN
-// ==========================================
 function handleChatKeydown(e) {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
@@ -996,9 +933,6 @@ function autoResizeTextarea(el) {
   el.style.height = Math.min(el.scrollHeight, 120) + "px";
 }
 
-// ==========================================
-// CREATE / JOIN / LEAVE TEAM
-// ==========================================
 async function createTeam() {
   const nameInput = document.getElementById("new-team-name");
   const name = nameInput ? nameInput.value.trim() : "";
@@ -1088,8 +1022,7 @@ async function confirmLeaveTeamAction(e) {
     currentTeam = null;
     closeModal("modal-leave-team-confirm");
     closeModal("modal-team-admin");
-    
-    // Reload teams list
+
     await loadTeams();
     if (allTeams && allTeams.length > 0) {
       selectTeam(allTeams[0]);
@@ -1135,9 +1068,6 @@ async function deleteCurrentTeam() {
   await loadTeams();
 }
 
-// ==========================================
-// VIDEO CALL — WebRTC
-// ==========================================
 function createSyntheticStream() {
   const canvas = document.createElement("canvas");
   canvas.width = 640;
@@ -1171,7 +1101,6 @@ function createSyntheticStream() {
   return canvas.captureStream(30);
 }
 
-// ============ LOBBY — Google Meet style pre-join screen ============
 let lobbyMicEnabled = true;
 let lobbyCamEnabled = true;
 let lobbyStream = null;
@@ -1263,7 +1192,6 @@ function toggleCallPeople() {
   panel.classList.toggle("hidden", !hidden);
   if (hidden) switchCallPanel("people", document.querySelectorAll(".call-chat-tab")[1]);
 }
-// ============ END LOBBY ============
 
 async function startCall(announce = true, skipMediaSetup = false) {
   if (!currentTeam) {
@@ -1360,7 +1288,6 @@ async function acceptCall() {
   openCallOverlay();
   addVideoTile(localStream, user.name || "You", true);
 
-  // Create peer for caller
   const pc = createPeer(pendingCallData.callerId);
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
@@ -1391,7 +1318,7 @@ async function handleIceCandidate(data) {
   if (!pc) return;
   try {
     await pc.addIceCandidate(data.candidate);
-  } catch (e) { /* ignore */ }
+  } catch (e) {  }
 }
 
 function createPeer(socketId) {
@@ -1648,7 +1575,7 @@ async function toggleScreenShare() {
       if (sender) sender.replaceTrack(videoTrack);
     });
     videoTrack.onended = () => {
-      // Switch back to camera
+      
       if (localStream) {
         const cameraTrack = localStream.getVideoTracks()[0];
         Object.values(peers).forEach(pc => {
@@ -1664,9 +1591,6 @@ async function toggleScreenShare() {
   }
 }
 
-// ==========================================
-// CALL TIMER
-// ==========================================
 function startCallTimer() {
   callSeconds = 0;
   clearInterval(callTimerInterval);
@@ -1682,9 +1606,6 @@ function stopCallTimer() {
   document.getElementById("call-timer").textContent = "00:00";
 }
 
-// ==========================================
-// MODALS & UI HELPERS
-// ==========================================
 function openModal(id) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -1731,9 +1652,6 @@ function setNavActive(tab) {
   }
 }
 
-// ==========================================
-// TOAST
-// ==========================================
 function showToast(title, body, type = "info") {
   const container = document.getElementById("toast-container");
   const icons = {
@@ -1759,9 +1677,6 @@ function showToast(title, body, type = "info") {
   }, 4000);
 }
 
-// ==========================================
-// PROFILE MANAGEMENT
-// ==========================================
 async function openProfileModal() {
   try {
     const res = await apiFetch("/user/me");
@@ -1770,7 +1685,7 @@ async function openProfileModal() {
       Auth.setSession(Auth.getToken(), { ...user, ...u });
     }
   } catch (e) {
-    // fallback to stored session
+    
   }
 
   const currentUser = Auth.getUser() || user;
@@ -1888,17 +1803,11 @@ async function changePassword() {
   }
 }
 
-// ==========================================
-// AUTH
-// ==========================================
 function logout() {
   Auth.clear();
   window.location.href = "../auth/auth.html";
 }
 
-// ==========================================
-// UTILITIES
-// ==========================================
 function escapeHtml(str) {
   if (!str) return "";
   return String(str)

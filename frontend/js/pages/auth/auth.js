@@ -1,13 +1,9 @@
-// ==========================================
-// Auth Page Logic — auth.js
-// ==========================================
 
-// Redirect if already logged in
+
 if (Auth.isLoggedIn()) {
   window.location.href = "pages/dashboard.html";
 }
 
-// Tab switching
 function switchTab(tab) {
   const loginForm = document.getElementById("form-login");
   const signupForm = document.getElementById("form-signup");
@@ -25,7 +21,6 @@ function switchTab(tab) {
   clearAlert();
 }
 
-// Show alert
 function showAlert(msg, type = "error") {
   const banner = document.getElementById("alert-banner");
   banner.textContent = msg;
@@ -37,7 +32,6 @@ function clearAlert() {
   banner.style.display = "none";
 }
 
-// Button loading state
 function setLoading(btnId, loading) {
   const btn = document.getElementById(btnId);
   const text = btn.querySelector(".btn-text");
@@ -47,7 +41,6 @@ function setLoading(btnId, loading) {
   spinner.style.display = loading ? "block" : "none";
 }
 
-// Login
 async function handleLogin(e) {
   e.preventDefault();
   clearAlert();
@@ -63,7 +56,6 @@ async function handleLogin(e) {
       body: JSON.stringify({ email, password }),
     });
 
-    // Backend may return token + user or just token
     const token = data.token || data.accessToken;
     const user = data.user || { email };
     Auth.setSession(token, user);
@@ -76,7 +68,6 @@ async function handleLogin(e) {
   }
 }
 
-// Signup
 async function handleSignup(e) {
   e.preventDefault();
   clearAlert();

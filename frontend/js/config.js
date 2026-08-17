@@ -7,7 +7,6 @@ const CONFIG = {
   SOCKET_URL: BACKEND_URL,
 };
 
-// Token helpers
 const Auth = {
   getToken: () => localStorage.getItem("token"),
   getUser: () => JSON.parse(localStorage.getItem("user") || "null"),
@@ -22,13 +21,11 @@ const Auth = {
   isLoggedIn: () => !!localStorage.getItem("token"),
 };
 
-// Generic fetch wrapper with 8s timeout so page never hangs forever
 async function apiFetch(endpoint, options = {}) {
   const token = Auth.getToken();
   const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  // Abort fetch after 8 seconds so UI is never blocked indefinitely
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 8000);
 
