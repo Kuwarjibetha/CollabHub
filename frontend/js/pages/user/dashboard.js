@@ -383,6 +383,25 @@ function updateTeamLiveBadge(teamId, isLive, count = 1) {
   }
 }
 
+const teamUnreadCounts = {};
+
+function updateTeamUnreadBadge(teamId, count) {
+  const item = document.getElementById(`team-item-${teamId}`);
+  if (!item) return;
+  let badge = item.querySelector(".team-unread-badge");
+  if (count > 0) {
+    if (!badge) {
+      badge = document.createElement("span");
+      badge.className = "team-unread-badge";
+      badge.id = `team-unread-${teamId}`;
+      item.appendChild(badge);
+    }
+    badge.textContent = count > 99 ? "99+" : count;
+  } else if (badge) {
+    badge.remove();
+  }
+}
+
 async function loadTeams() {
   try {
     const res = await apiFetch("/team/my-teams");
@@ -392,6 +411,7 @@ async function loadTeams() {
       selectTeam(allTeams[0]);
     }
     if (socket && socket.connected) {
+      allTeams.forEach(t => socket.emit("joinRoom", t.id));
       socket.emit("get-active-calls");
     }
   } catch (err) {
@@ -419,6 +439,11 @@ function renderTeams(teams) {
       ? `<span class="badge-live"><span class="badge-live-dot"></span> LIVE</span>`
       : "";
 
+    const unread = teamUnreadCounts[team.id] || 0;
+    const unreadBadgeHtml = unread > 0
+      ? `<span class="team-unread-badge" id="team-unread-${team.id}">${unread > 99 ? "99+" : unread}</span>`
+      : "";
+
     const el = document.createElement("div");
     el.className = "team-item" + (currentTeam?.id === team.id ? " active" : "");
     el.id = `team-item-${team.id}`;
@@ -436,6 +461,7 @@ function renderTeams(teams) {
         <div class="team-code">${team.inviteCode || team.code || ""}</div>
       </div>
       ${liveBadgeHtml}
+      ${unreadBadgeHtml}
     `;
     list.appendChild(el);
   });
@@ -449,6 +475,10 @@ function filterTeams(query) {
 
 async function selectTeam(team) {
   currentTeam = team;
+
+  // Clear unread count for this team
+  teamUnreadCounts[team.id] = 0;
+  updateTeamUnreadBadge(team.id, 0);
 
   // Update active state
   document.querySelectorAll(".team-item").forEach(el => el.classList.remove("active"));
@@ -802,10 +832,39 @@ async function sendMessage() {
 }
 
 function handleNewMessage(msg) {
-  if (currentTeam && (msg.teamId === currentTeam.id || msg.teamId === String(currentTeam.id))) {
+  const currentUserId = (Auth.getUser() || user)?.id;
+  const isOwn = String(msg.senderId) === String(currentUserId);
+  const targetTeam = allTeams.find(t => String(t.id) === String(msg.teamId));
+  const teamName = targetTeam?.name || "Team";
+  const senderName = msg.sender?.name || (getMemberName(msg.senderId) || "Teammate");
+
+  // Check if current user is @mentioned
+  const userName = (Auth.getUser() || user)?.name || "";
+  const isMentioned = !isOwn && userName && msg.content && msg.content.toLowerCase().includes(`@${userName.toLowerCase()}`);
+
+  if (currentTeam && (String(msg.teamId) === String(currentTeam.id))) {
     renderMessage(msg, true);
     renderMessage(msg, true, "call-messages-area");
-    if (String(msg.senderId) !== String((Auth.getUser() || user).id)) apiFetch(`/chat/${currentTeam.id}/read`, { method: "PATCH" }).catch(() => {});
+    if (!isOwn) {
+      apiFetch(`/chat/${currentTeam.id}/read`, { method: "PATCH" }).catch(() => {});
+      if (isMentioned) {
+        showToast(`🏷️ @Mention from ${senderName}`, msg.content || "Mentioned you in chat", "info");
+        fetchAndRenderNotifications();
+      }
+    }
+  } else {
+    // Message received in another team
+    if (!isOwn) {
+      teamUnreadCounts[msg.teamId] = (teamUnreadCounts[msg.teamId] || 0) + 1;
+      updateTeamUnreadBadge(msg.teamId, teamUnreadCounts[msg.teamId]);
+      
+      if (isMentioned) {
+        showToast(`🏷️ @Mention in ${teamName}`, `${senderName}: ${msg.content}`, "info");
+      } else {
+        showToast(`💬 Message in ${teamName}`, `${senderName}: ${msg.content || "Sent a file"}`, "info");
+      }
+      fetchAndRenderNotifications();
+    }
   }
 }
 
@@ -1835,18 +1894,22 @@ function escapeHtml(str) {
 // ==========================================
 // NOTIFICATIONS MANAGEMENT
 // ==========================================
+let currentNotifFilter = "all";
+let globalNotificationsList = [];
+
 async function openNotificationsModal() {
   openModal("modal-notifications");
   await fetchAndRenderNotifications();
 }
 
-async function fetchAndRenderNotifications() {
-  const container = document.getElementById("notifications-list");
-  const countLabel = document.getElementById("notif-count-label");
-  const badge = document.getElementById("notif-badge");
+function filterNotifs(filter, btn) {
+  currentNotifFilter = filter;
+  document.querySelectorAll("#notif-filter-buttons .notif-filter-tab").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  renderNotificationsList(globalNotificationsList);
+}
 
-  if (!container) return;
-  
+async function fetchAndRenderNotifications() {
   let notifications = [];
   try {
     const res = await apiFetch("/notification");
@@ -1859,46 +1922,81 @@ async function fetchAndRenderNotifications() {
     notifications = generateFallbackGroupNotifications();
   }
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  globalNotificationsList = notifications;
+  renderNotificationsList(notifications);
+}
+
+function renderNotificationsList(notifications) {
+  const container = document.getElementById("notifications-list");
+  const countLabel = document.getElementById("notif-count-label");
+  const badge = document.getElementById("notif-badge");
+  if (!container) return;
+
+  const totalUnread = notifications.filter(n => !n.isRead).length;
   if (badge) {
-    badge.style.display = unreadCount > 0 ? "block" : "none";
+    if (totalUnread > 0) {
+      badge.style.display = "flex";
+      badge.textContent = totalUnread > 9 ? "9+" : totalUnread;
+    } else {
+      badge.style.display = "none";
+    }
+  }
+
+  // Filter list
+  let filtered = notifications;
+  if (currentNotifFilter === "message") {
+    filtered = notifications.filter(n => n.type === "message" || n.type === "chat");
+  } else if (currentNotifFilter === "mention") {
+    filtered = notifications.filter(n => n.type === "mention");
+  } else if (currentNotifFilter === "call") {
+    filtered = notifications.filter(n => n.type === "call" || n.type === "video_call");
   }
 
   if (countLabel) {
-    countLabel.textContent = `${unreadCount} Unread (${notifications.length} Total)`;
+    countLabel.textContent = `${totalUnread} Unread • Showing ${filtered.length} of ${notifications.length} notifications`;
   }
 
   container.innerHTML = "";
-  if (notifications.length === 0) {
+  if (filtered.length === 0) {
     container.innerHTML = `
       <div style="text-align:center;padding:40px 0;color:var(--clr-text-dim);">
         <svg width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="opacity:0.4;margin-bottom:8px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-        <p style="font-size:0.85rem;">No group notifications yet.</p>
+        <p style="font-size:0.85rem;">No notifications in this category.</p>
       </div>
     `;
     return;
   }
 
-  notifications.forEach(n => {
+  filtered.forEach(n => {
     const item = document.createElement("div");
     const isRead = n.isRead;
     
-    let typeIcon = "📢";
-    let bgStyle = isRead ? 'rgba(255,255,255,0.03)' : 'rgba(124,58,237,0.12)';
-    let borderStyle = isRead ? 'rgba(255,255,255,0.06)' : 'rgba(124,58,237,0.25)';
+    let typeIcon = "💬";
+    let typeBadge = "Message";
+    let bgStyle = isRead ? 'rgba(255,255,255,0.03)' : 'rgba(26,115,232,0.12)';
+    let borderStyle = isRead ? 'rgba(255,255,255,0.06)' : 'rgba(26,115,232,0.3)';
+    let actionBtn = "";
 
-    if (n.type === "team_invite" || n.type === "group_invite") {
-      typeIcon = "👥";
-      bgStyle = isRead ? 'rgba(255,255,255,0.03)' : 'rgba(59,130,246,0.12)';
-      borderStyle = isRead ? 'rgba(255,255,255,0.06)' : 'rgba(59,130,246,0.25)';
-    } else if (n.type === "call" || n.type === "video_call") {
+    if (n.type === "call" || n.type === "video_call") {
       typeIcon = "📹";
-      bgStyle = isRead ? 'rgba(255,255,255,0.03)' : 'rgba(16,185,129,0.12)';
-      borderStyle = isRead ? 'rgba(255,255,255,0.06)' : 'rgba(16,185,129,0.25)';
-    } else if (n.type === "mention" || n.type === "chat") {
+      typeBadge = "Live Call";
+      bgStyle = isRead ? 'rgba(255,255,255,0.03)' : 'rgba(234,67,53,0.12)';
+      borderStyle = isRead ? 'rgba(255,255,255,0.06)' : 'rgba(234,67,53,0.35)';
+      actionBtn = `<button onclick="openNotificationAction('${n.id}', '${n.relatedId || ''}', 'call')" style="padding:5px 12px;font-size:0.75rem;background:#ea4335;color:white;border:none;border-radius:6px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">📹 Join Call</button>`;
+    } else if (n.type === "mention") {
+      typeIcon = "🏷️";
+      typeBadge = "Mention";
+      bgStyle = isRead ? 'rgba(255,255,255,0.03)' : 'rgba(251,191,36,0.12)';
+      borderStyle = isRead ? 'rgba(255,255,255,0.06)' : 'rgba(251,191,36,0.35)';
+      actionBtn = `<button onclick="openNotificationAction('${n.id}', '${n.relatedId || ''}', 'chat')" style="padding:5px 12px;font-size:0.75rem;background:var(--clr-primary);color:white;border:none;border-radius:6px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">💬 Open Chat</button>`;
+    } else if (n.type === "message" || n.type === "chat") {
       typeIcon = "💬";
-      bgStyle = isRead ? 'rgba(255,255,255,0.03)' : 'rgba(245,158,11,0.12)';
-      borderStyle = isRead ? 'rgba(255,255,255,0.06)' : 'rgba(245,158,11,0.25)';
+      typeBadge = "Message";
+      actionBtn = `<button onclick="openNotificationAction('${n.id}', '${n.relatedId || ''}', 'chat')" style="padding:5px 12px;font-size:0.75rem;background:rgba(255,255,255,0.08);color:white;border:1px solid var(--clr-border);border-radius:6px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">💬 View</button>`;
+    } else {
+      typeIcon = "👥";
+      typeBadge = "Team Update";
+      actionBtn = `<button onclick="openNotificationAction('${n.id}', '${n.relatedId || ''}', 'team')" style="padding:5px 12px;font-size:0.75rem;background:rgba(255,255,255,0.08);color:white;border:1px solid var(--clr-border);border-radius:6px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">👥 Open Team</button>`;
     }
 
     item.style.cssText = `
@@ -1915,19 +2013,39 @@ async function fetchAndRenderNotifications() {
     const timeStr = n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now";
 
     item.innerHTML = `
-      <div style="font-size:1.2rem;padding:6px;background:rgba(255,255,255,0.06);border-radius:8px;flex-shrink:0;">${typeIcon}</div>
+      <div style="font-size:1.15rem;padding:6px;background:rgba(255,255,255,0.06);border-radius:8px;flex-shrink:0;">${typeIcon}</div>
       <div style="flex:1;overflow:hidden;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-          <div style="font-size:0.85rem;font-weight:700;color:var(--clr-text);">${escapeHtml(n.title || "Group Notification")}</div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:0.84rem;font-weight:700;color:var(--clr-text);">${escapeHtml(n.title || "Notification")}</span>
+            <span style="font-size:0.65rem;padding:1px 5px;border-radius:4px;background:rgba(255,255,255,0.08);color:var(--clr-text-muted);font-weight:700;">${typeBadge}</span>
+          </div>
           <span style="font-size:0.7rem;color:var(--clr-text-dim);white-space:nowrap;">${timeStr}</span>
         </div>
-        <div style="font-size:0.8rem;color:var(--clr-text-muted);margin-top:3px;line-height:1.35;">${escapeHtml(n.content || n.message || "Group activity update")}</div>
+        <div style="font-size:0.8rem;color:var(--clr-text-muted);margin-top:3px;line-height:1.35;">${escapeHtml(n.content || n.message || "Activity update")}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+          ${actionBtn}
+          ${!isRead ? `<button onclick="markNotificationRead('${n.id}')" title="Mark as read" style="background:none;border:none;color:var(--clr-text-muted);font-weight:600;font-size:0.72rem;cursor:pointer;padding:2px 6px;">Mark Read</button>` : ''}
+        </div>
       </div>
-      ${!isRead ? `<button onclick="markNotificationRead('${n.id}')" title="Mark as read" style="background:none;border:none;color:var(--clr-primary-light);font-weight:700;font-size:0.85rem;cursor:pointer;padding:2px 6px;border-radius:4px;flex-shrink:0;">✓</button>` : ''}
     `;
 
     container.appendChild(item);
   });
+}
+
+async function openNotificationAction(notifId, teamId, actionType) {
+  closeModal("modal-notifications");
+  if (teamId) {
+    const team = allTeams.find(t => String(t.id) === String(teamId));
+    if (team) {
+      await selectTeam(team);
+      if (actionType === "call") {
+        showLobby();
+      }
+    }
+  }
+  markNotificationRead(notifId);
 }
 
 function generateFallbackGroupNotifications() {
@@ -1936,9 +2054,10 @@ function generateFallbackGroupNotifications() {
     allTeams.forEach(t => {
       list.push({
         id: "team-" + t.id,
-        type: "group_invite",
-        title: `Group: ${t.name}`,
-        content: `You are an active member of team "${t.name}". Invite Code: ${t.inviteCode || 'N/A'}`,
+        type: "team_update",
+        title: `Team: ${t.name}`,
+        content: `You are a member of "${t.name}". Invite code: ${t.inviteCode || t.code || 'N/A'}`,
+        relatedId: t.id,
         isRead: false,
         createdAt: t.createdAt || new Date().toISOString()
       });
@@ -1946,9 +2065,9 @@ function generateFallbackGroupNotifications() {
   } else {
     list.push({
       id: "welcome-notif",
-      type: "broadcast",
+      type: "message",
       title: "Welcome to CollabHub",
-      content: "Join or create a team to receive live group notifications, team announcements, and video call updates.",
+      content: "Join or create a team to receive live message alerts, calls, mentions, and notifications.",
       isRead: false,
       createdAt: new Date().toISOString()
     });

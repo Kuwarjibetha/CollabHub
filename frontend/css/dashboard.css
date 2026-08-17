@@ -50,19 +50,63 @@
   cursor: pointer;
 }
 .nav-item:hover { background: var(--clr-surface-2); color: var(--clr-text); }
-.nav-item.active {
-  background: rgba(26, 115, 232, 0.18);
-  color: var(--clr-primary-light);
-}
 .nav-item .badge {
   position: absolute;
-  top: 7px; right: 7px;
-  width: 8px; height: 8px;
-  background: var(--clr-danger);
-  border-radius: 50%;
+  top: 4px; right: 4px;
+  min-width: 17px; height: 17px;
+  background: #ea4335;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  border-radius: 99px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
   border: 1.5px solid var(--clr-surface);
+  box-shadow: 0 0 10px rgba(234,67,53,0.7);
+  animation: pulseNotif 2s infinite;
 }
-.nav-spacer { flex: 1; }
+@keyframes pulseNotif {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+.team-unread-badge {
+  background: #ea4335;
+  color: white;
+  font-size: 0.68rem;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 99px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  margin-left: auto;
+  box-shadow: 0 2px 6px rgba(234,67,53,0.4);
+  flex-shrink: 0;
+}
+.notif-filter-tab {
+  padding: 5px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--clr-text-muted);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--clr-border);
+  border-radius: 99px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.notif-filter-tab:hover {
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+.notif-filter-tab.active {
+  background: var(--clr-primary);
+  color: white;
+  border-color: var(--clr-primary);
+}
 .nav-avatar { margin-top: 8px; cursor: pointer; }
 
 /* ==========================================
