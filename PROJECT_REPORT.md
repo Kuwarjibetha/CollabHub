@@ -225,7 +225,17 @@ Frontend Form Data -> Multer Middleware -> Cloudinary Storage API -> Returns CDN
 
 ---
 
-## 12. Future Improvements
+## 12. Links & Deployment URLs
+- **GitHub Repository**: https://github.com/Kuwarjibetha/CollabHub
+- **Backend Live Service URL**: https://collabhub-qvx3.onrender.com
+- **Frontend Live Website Link**: https://collabhub-1-whx9.onrender.com
+- **User / Admin Login Credentials**:
+  - `bethajikuwa@gmail.com` / Password: `Kuwarji@9934`
+  - `bethakuwarji@gmail.com` / Password: `Kuwarji@9934`
+
+---
+
+## 13. Future Improvements
 - **Screen Sharing & Multi-party Mesh Video Calls**: Expand WebRTC peer connection to support multi-user screen sharing and group conference rooms.
 - **End-to-End Encryption (E2EE)**: Implement client-side encryption for direct messages and private file transfers.
 - **AI-Powered Chat Summarization**: Integrate LLM APIs to summarize long unread team conversations and action items automatically.
