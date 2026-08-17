@@ -922,31 +922,37 @@ async function joinTeam() {
 
 async function leaveCurrentTeam() {
   if (!currentTeam) return;
-  const currentUser = Auth.getUser() || user;
-  const isOwner = String(currentTeam.ownerId || currentTeam.createdBy) === String(currentUser.id || currentUser.userId);
-
-  const confirmMsg = isOwner
-    ? `You are the Admin of "${currentTeam.name}". Delete this team for all members?`
-    : `Leave team "${currentTeam.name}"?`;
-
-  if (!confirm(confirmMsg)) return;
+  if (!confirm(`Are you sure you want to leave team "${currentTeam.name}"?`)) return;
 
   try {
-    if (isOwner) {
-      await apiFetch(`/team/${currentTeam.id}`, { method: "DELETE" });
-      showToast("Team Deleted", `Team "${currentTeam.name}" was deleted.`, "info");
-    } else {
-      await apiFetch(`/team/${currentTeam.id}/leave`, { method: "DELETE" });
-      showToast("Left Team", `You left "${currentTeam.name}".`, "info");
-    }
+    await apiFetch(`/team/${currentTeam.id}/leave`, { method: "DELETE" });
+    showToast("Left Team", `You left "${currentTeam.name}".`, "info");
   } catch (err) {
-    try {
-      await apiFetch(`/team/${currentTeam.id}/leave`, { method: "DELETE" });
-      showToast("Left Team", `You left "${currentTeam.name}".`, "info");
-    } catch (fallbackErr) {
-      showToast("Error", err.message || fallbackErr.message || "Could not leave team.", "error");
-      return;
-    }
+    showToast("Error", err.message || "Could not leave team.", "error");
+    return;
+  }
+
+  currentTeam = null;
+  const welcome = document.getElementById("chat-welcome");
+  if (welcome) welcome.style.display = "flex";
+  const active = document.getElementById("chat-active");
+  if (active) active.style.display = "none";
+  const startCallBtn = document.getElementById("btn-start-call");
+  if (startCallBtn) startCallBtn.style.display = "none";
+  closeModal("modal-team-admin");
+  await loadTeams();
+}
+
+async function deleteCurrentTeam() {
+  if (!currentTeam) return;
+  if (!confirm(`Are you sure you want to permanently delete team "${currentTeam.name}" for all members?`)) return;
+
+  try {
+    await apiFetch(`/team/${currentTeam.id}`, { method: "DELETE" });
+    showToast("Team Deleted", `Team "${currentTeam.name}" was deleted.`, "info");
+  } catch (err) {
+    showToast("Error", err.message || "Could not delete team.", "error");
+    return;
   }
 
   currentTeam = null;
