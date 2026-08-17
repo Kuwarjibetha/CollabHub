@@ -1,13 +1,8 @@
-/* ==========================================
-   CollabHub — Dashboard Styles
-   Google Meet Style — Dark Minimal Layout
-   ========================================== */
+
 
 .dashboard-body { overflow: hidden; height: 100vh; background: var(--clr-bg); }
 
-/* ==========================================
-   Layout Shell — Google Meet 3-Column Grid
-   ========================================== */
+
 .app-shell {
   display: grid;
   grid-template-columns: 72px 280px 1fr 300px;
@@ -16,9 +11,7 @@
   overflow: hidden;
 }
 
-/* ==========================================
-   Nav Rail (Far Left) — Google Meet Style
-   ========================================== */
+
 .nav-rail {
   background: var(--clr-surface);
   border-right: 1px solid var(--clr-border);
@@ -116,9 +109,7 @@
 }
 .nav-avatar { margin-top: 8px; cursor: pointer; }
 
-/* ==========================================
-   Sidebar — Google Meet Left Panel Style
-   ========================================== */
+
 .sidebar {
   background: var(--clr-surface);
   border-right: 1px solid var(--clr-border);
@@ -242,9 +233,7 @@
 .sidebar-empty svg { opacity: 0.3; }
 .sidebar-empty p { font-size: 0.84rem; line-height: 1.5; }
 
-/* ==========================================
-   Main Chat Panel — Google Meet Chat Style
-   ========================================== */
+
 .chat-panel {
   display: flex;
   flex-direction: column;
@@ -452,9 +441,7 @@
 .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
 @keyframes typingDot { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
 
-/* ==========================================
-   Right Panel — Members + Info
-   ========================================== */
+
 .right-panel {
   background: var(--clr-surface);
   display: flex;
@@ -539,9 +526,7 @@
   border: 1.5px solid var(--clr-surface);
 }
 
-/* ==========================================
-   VIDEO CALL OVERLAY — GOOGLE MEET EXACT STYLE
-   ========================================== */
+
 .call-overlay {
   position: fixed;
   inset: 0;
@@ -552,7 +537,7 @@
 }
 .call-overlay.hidden { display: none; }
 
-/* Call Header Bar */
+
 .call-header {
   padding: 12px 20px;
   display: flex;
@@ -590,7 +575,7 @@
   border-radius: var(--radius-full);
 }
 
-/* Participant Grid — Auto-resize like Google Meet */
+
 .call-videos {
   flex: 1;
   display: grid;
@@ -608,7 +593,7 @@
 .call-videos.five,
 .call-videos.six { grid-template-columns: repeat(3, minmax(0, 380px)); }
 
-/* Video Tile — Google Meet participant tile */
+
 .video-tile {
   position: relative;
   border-radius: 14px;
@@ -675,7 +660,7 @@
   color: white;
 }
 
-/* Google Meet Bottom Controls Bar */
+
 .call-controls {
   padding: 16px 24px 24px;
   display: flex;
@@ -701,7 +686,7 @@
   gap: 8px;
 }
 
-/* Google Meet style control buttons */
+
 .call-ctrl-btn {
   width: 56px; height: 56px;
   border-radius: 50%;
@@ -741,7 +726,7 @@
   pointer-events: none;
 }
 
-/* Spotlight / Pinned View */
+
 .call-spotlight {
   flex: 1;
   display: flex;
@@ -788,7 +773,7 @@
 .spotlight-thumb.active { border-color: var(--clr-success); }
 .spotlight-thumb video { width: 100%; height: 100%; object-fit: cover; }
 
-/* Google Meet Lobby Screen */
+
 .call-lobby {
   position: fixed;
   inset: 0;
@@ -857,7 +842,7 @@
 .lobby-ctrl-btn:hover { background: #4a4d51; }
 .lobby-ctrl-btn.muted { background: var(--clr-danger); color: white; }
 
-/* Google Meet In-call Right Panel (Chat / Participants) */
+
 .call-chat-panel {
   width: 340px;
   flex-shrink: 0;
@@ -932,7 +917,7 @@
   border-color: var(--clr-primary-light);
 }
 
-/* Participants panel in call */
+
 .call-participants-list {
   flex: 1;
   overflow-y: auto;
@@ -956,7 +941,7 @@
   margin-left: auto;
 }
 
-/* Incoming call popup */
+
 .incoming-call {
   position: fixed;
   bottom: 24px; right: 24px;
@@ -1002,7 +987,7 @@
 .btn-decline { background: var(--clr-danger); color: white; border: none; }
 .btn-decline:hover { background: #c5221f; }
 
-/* Screen sharing indicator */
+
 .screen-share-badge {
   position: absolute;
   top: 12px;
@@ -1020,9 +1005,7 @@
   animation: fadeIn 0.3s ease;
 }
 
-/* ==========================================
-   Notification Toast — Google Material Style
-   ========================================== */
+
 .toast-container {
   position: fixed;
   bottom: 24px; left: 50%;
@@ -1062,9 +1045,7 @@
 .toast.error .toast-icon { color: var(--clr-danger); }
 .toast.info .toast-icon { color: var(--clr-primary-light); }
 
-/* ==========================================
-   Modals
-   ========================================== */
+
 .invite-code {
   display: flex;
   align-items: center;
@@ -1083,9 +1064,7 @@
   color: var(--clr-primary-light);
 }
 
-/* ==========================================
-   Loading Screen — Google Meet style
-   ========================================== */
+
 .loading-screen {
   position: fixed;
   inset: 0;
@@ -1133,9 +1112,7 @@
 }
 .loading-screen p { color: var(--clr-text-muted); font-size: 0.875rem; }
 
-/* ==========================================
-   Edit message input
-   ========================================== */
+
 .msg-edit-input {
   background: var(--clr-surface-2);
   border: 1px solid var(--clr-primary-light);
@@ -1147,9 +1124,7 @@
   width: 100%;
 }
 
-/* ==========================================
-   RESPONSIVE MEDIA QUERIES
-   ========================================== */
+
 @media (max-width: 1200px) {
   .app-shell {
     grid-template-columns: 64px 260px 1fr 280px;
