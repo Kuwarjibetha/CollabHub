@@ -557,7 +557,12 @@
   </div>
 
 
-  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <script>
+    if (typeof io === 'undefined') {
+      document.write('<script src="https://collabhub-qvx3.onrender.com/socket.io/socket.io.js"><\/script>');
+    }
+  </script>
   <script src="../../js/config.js"></script>
   <script src="../../js/pages/user/dashboard.js"></script>
 </body>

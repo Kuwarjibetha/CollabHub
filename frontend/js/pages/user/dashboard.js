@@ -235,6 +235,10 @@ function hideLoading() {
 // SOCKET.IO
 // ==========================================
 function connectSocket() {
+  if (typeof io === "undefined") {
+    console.warn("Socket.io client library not loaded yet.");
+    return;
+  }
   socket = io(SOCKET_URL, {
     auth: { token: Auth.getToken() },
     reconnectionAttempts: 5,
