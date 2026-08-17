@@ -925,33 +925,39 @@ async function leaveCurrentTeam() {
   const currentUser = Auth.getUser() || user;
   const isOwner = String(currentTeam.ownerId || currentTeam.createdBy) === String(currentUser.id || currentUser.userId);
 
-  if (isOwner) {
-    if (!confirm(`You are the Admin of "${currentTeam.name}". Delete this team for all members?`)) return;
-    try {
+  const confirmMsg = isOwner
+    ? `You are the Admin of "${currentTeam.name}". Delete this team for all members?`
+    : `Leave team "${currentTeam.name}"?`;
+
+  if (!confirm(confirmMsg)) return;
+
+  try {
+    if (isOwner) {
       await apiFetch(`/team/${currentTeam.id}`, { method: "DELETE" });
       showToast("Team Deleted", `Team "${currentTeam.name}" was deleted.`, "info");
-      currentTeam = null;
-      document.getElementById("chat-welcome").style.display = "flex";
-      document.getElementById("chat-active").style.display = "none";
-      document.getElementById("btn-start-call").style.display = "none";
-      await loadTeams();
-    } catch (err) {
-      showToast("Error", err.message || "Could not delete team.", "error");
+    } else {
+      await apiFetch(`/team/${currentTeam.id}/leave`, { method: "DELETE" });
+      showToast("Left Team", `You left "${currentTeam.name}".`, "info");
     }
-  } else {
-    if (!confirm(`Leave team "${currentTeam.name}"?`)) return;
+  } catch (err) {
     try {
       await apiFetch(`/team/${currentTeam.id}/leave`, { method: "DELETE" });
       showToast("Left Team", `You left "${currentTeam.name}".`, "info");
-      currentTeam = null;
-      document.getElementById("chat-welcome").style.display = "flex";
-      document.getElementById("chat-active").style.display = "none";
-      document.getElementById("btn-start-call").style.display = "none";
-      await loadTeams();
-    } catch (err) {
-      showToast("Error", err.message || "Could not leave team.", "error");
+    } catch (fallbackErr) {
+      showToast("Error", err.message || fallbackErr.message || "Could not leave team.", "error");
+      return;
     }
   }
+
+  currentTeam = null;
+  const welcome = document.getElementById("chat-welcome");
+  if (welcome) welcome.style.display = "flex";
+  const active = document.getElementById("chat-active");
+  if (active) active.style.display = "none";
+  const startCallBtn = document.getElementById("btn-start-call");
+  if (startCallBtn) startCallBtn.style.display = "none";
+  closeModal("modal-team-admin");
+  await loadTeams();
 }
 
 // ==========================================
