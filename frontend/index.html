@@ -3,538 +3,518 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CollabHub — Real-time Video Collaboration</title>
-  <meta name="description" content="CollabHub: Team chat, video calls, file sharing — all in one place. Collaborate in real-time with your team." />
+  <title>CollabHub — Video calls and meetings for everyone</title>
+  <meta name="description" content="CollabHub: Premium video meetings, team chat, and real-time collaboration. Connect with your team from anywhere." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --clr-bg: #06060f;
-      --clr-surface: #0e0e1a;
-      --clr-surface-2: #14142a;
-      --clr-border: rgba(255,255,255,0.07);
-      --clr-primary: #7c3aed;
-      --clr-primary-light: #a78bfa;
-      --clr-accent: #3b82f6;
-      --clr-text: #f1f1f8;
-      --clr-text-muted: #9090b0;
-      --clr-text-dim: #55556a;
-      --gradient: linear-gradient(135deg, #7c3aed, #3b82f6);
-      --gradient-warm: linear-gradient(135deg, #7c3aed, #ec4899);
-      --font: 'Inter', sans-serif;
+      --bg: #202124;
+      --surface: #2d2f31;
+      --surface2: #3c4043;
+      --primary: #1a73e8;
+      --primary-dark: #1557b0;
+      --success: #34a853;
+      --danger: #ea4335;
+      --warning: #fbbc04;
+      --text: #e8eaed;
+      --text-muted: #9aa0a6;
+      --text-dim: #5f6368;
+      --border: rgba(255,255,255,0.1);
+      --font: 'Google Sans', 'Inter', sans-serif;
     }
     html { scroll-behavior: smooth; }
     body {
       font-family: var(--font);
-      background: var(--clr-bg);
-      color: var(--clr-text);
-      overflow-x: hidden;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
       -webkit-font-smoothing: antialiased;
     }
     a { text-decoration: none; color: inherit; }
-
-    /* ===== SCROLLBAR ===== */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-thumb { background: #333; border-radius: 99px; }
+    button { cursor: pointer; font-family: var(--font); }
 
     /* ===== NAVBAR ===== */
     .navbar {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 6%; height: 68px;
-      background: rgba(6,6,15,0.8);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--clr-border);
-      transition: all 0.3s ease;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(32,33,36,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 40px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    .nav-brand { display: flex; align-items: center; gap: 10px; }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
     .nav-logo {
       width: 36px; height: 36px;
-      background: var(--gradient);
+      background: var(--primary);
       border-radius: 10px;
       display: flex; align-items: center; justify-content: center;
     }
-    .nav-logo svg { width: 20px; height: 20px; }
-    .nav-name {
-      font-size: 1.15rem; font-weight: 800;
-      background: var(--gradient);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .nav-links { display: flex; align-items: center; gap: 8px; }
     .nav-link {
-      padding: 7px 16px; font-size: 0.875rem; font-weight: 500;
-      color: var(--clr-text-muted); border-radius: 8px;
-      transition: all 0.2s;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: 0.15s;
     }
-    .nav-link:hover { color: var(--clr-text); background: rgba(255,255,255,0.05); }
-    .btn-nav-login {
-      padding: 8px 20px; font-size: 0.875rem; font-weight: 600;
-      color: var(--clr-text); border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 8px; cursor: pointer; transition: all 0.2s;
-      background: rgba(255,255,255,0.05);
+    .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+    .btn-nav-primary {
+      padding: 9px 20px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 999px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: 0.15s;
+      cursor: pointer;
     }
-    .btn-nav-login:hover { border-color: rgba(124,58,237,0.5); background: rgba(124,58,237,0.1); }
-    .btn-nav-cta {
-      padding: 8px 20px; font-size: 0.875rem; font-weight: 600;
-      color: white; background: var(--gradient);
-      border-radius: 8px; cursor: pointer; transition: all 0.2s;
-      border: none; box-shadow: 0 4px 16px rgba(124,58,237,0.35);
+    .btn-nav-primary:hover { background: var(--primary-dark); }
+    .btn-nav-outline {
+      padding: 9px 20px;
+      background: transparent;
+      color: var(--primary);
+      border: 1px solid rgba(138,180,248,0.5);
+      border-radius: 999px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: 0.15s;
+      cursor: pointer;
     }
-    .btn-nav-cta:hover { box-shadow: 0 6px 24px rgba(124,58,237,0.55); transform: translateY(-1px); }
+    .btn-nav-outline:hover { background: rgba(138,180,248,0.1); }
 
     /* ===== HERO ===== */
     .hero {
-      min-height: 100vh;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      text-align: center;
-      padding: 100px 6% 60px;
-      position: relative;
-      overflow: hidden;
+      min-height: calc(100vh - 64px);
+      display: flex;
+      align-items: center;
+      padding: 60px 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      gap: 60px;
     }
-
-    /* BG Effects — pointer-events:none on ALL bg elements so buttons are always clickable */
-    .hero-bg {
-      position: absolute; inset: 0;
-      pointer-events: none !important;
-      overflow: hidden;
-      z-index: 0;
-    }
-    .hero-orb {
-      position: absolute; border-radius: 50%; filter: blur(90px);
-      pointer-events: none !important;
-      animation: orbFloat 10s ease-in-out infinite;
-    }
-    .orb-1 { width: 600px; height: 600px; background: rgba(124,58,237,0.18); top: -200px; left: -150px; animation-delay: 0s; }
-    .orb-2 { width: 500px; height: 500px; background: rgba(59,130,246,0.14); bottom: -100px; right: -120px; animation-delay: -4s; }
-    .orb-3 { width: 300px; height: 300px; background: rgba(236,72,153,0.10); top: 40%; left: 50%; transform: translate(-50%,-50%); animation-delay: -7s; }
-    @keyframes orbFloat {
-      0%,100% { transform: translate(0,0) scale(1); }
-      33% { transform: translate(40px,-30px) scale(1.06); }
-      66% { transform: translate(-25px,20px) scale(0.96); }
-    }
-
-    /* Grid lines bg */
-    .hero-grid {
-      position: absolute; inset: 0;
-      pointer-events: none !important;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-      background-size: 60px 60px;
-      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
-    }
-
-    /* Hero content always above background */
-    .hero > *:not(.hero-bg) {
-      position: relative;
-      z-index: 1;
-    }
-
+    .hero-content { flex: 1; }
     .hero-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 6px 14px 6px 10px;
-      background: rgba(124,58,237,0.15);
-      border: 1px solid rgba(124,58,237,0.35);
-      border-radius: 99px; font-size: 0.8rem; font-weight: 600;
-      color: var(--clr-primary-light);
-      margin-bottom: 28px;
-      animation: fadeUp 0.6s ease both;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(26,115,232,0.12);
+      border: 1px solid rgba(26,115,232,0.3);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #8ab4f8;
+      margin-bottom: 24px;
     }
-    .badge-dot { width: 7px; height: 7px; background: #10b981; border-radius: 50%; box-shadow: 0 0 8px #10b981; animation: pulse 2s infinite; }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-
-    .hero-title {
-      font-size: clamp(2.8rem, 6vw, 5rem);
-      font-weight: 900; line-height: 1.1;
-      letter-spacing: -0.035em;
+    .hero-badge span { width: 6px; height: 6px; background: var(--primary); border-radius: 50%; }
+    .hero h1 {
+      font-size: clamp(2.4rem, 5vw, 3.5rem);
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
       margin-bottom: 20px;
-      animation: fadeUp 0.7s 0.1s ease both;
+      color: var(--text);
     }
-    .hero-title .gradient-text {
-      background: var(--gradient);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    .hero h1 .highlight { color: #8ab4f8; }
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      max-width: 480px;
+      margin-bottom: 36px;
+      font-weight: 400;
     }
-    .hero-title .gradient-text-warm {
-      background: var(--gradient-warm);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-    }
-
-    .hero-subtitle {
-      font-size: clamp(1rem, 2vw, 1.2rem);
-      color: var(--clr-text-muted); line-height: 1.7;
-      max-width: 580px; margin: 0 auto 40px;
-      animation: fadeUp 0.7s 0.2s ease both;
-    }
-
-    .hero-cta-row {
-      display: flex; align-items: center; gap: 14px; justify-content: center;
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
       flex-wrap: wrap;
-      animation: fadeUp 0.7s 0.3s ease both;
     }
     .btn-hero-primary {
-      padding: 14px 32px; font-size: 1rem; font-weight: 700;
-      color: white; background: var(--gradient);
-      border-radius: 12px; cursor: pointer; border: none;
-      box-shadow: 0 6px 28px rgba(124,58,237,0.45);
-      transition: all 0.25s; display: flex; align-items: center; gap: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: 0.15s;
+      box-shadow: 0 2px 12px rgba(26,115,232,0.3);
     }
-    .btn-hero-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 36px rgba(124,58,237,0.6); }
-    .btn-hero-secondary {
-      padding: 14px 32px; font-size: 1rem; font-weight: 600;
-      color: var(--clr-text); background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 12px; cursor: pointer;
-      transition: all 0.25s; display: flex; align-items: center; gap: 8px;
+    .btn-hero-primary:hover { background: var(--primary-dark); box-shadow: 0 4px 20px rgba(26,115,232,0.45); transform: translateY(-1px); }
+    .btn-hero-outline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 999px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: 0.15s;
     }
-    .btn-hero-secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(124,58,237,0.4); }
+    .btn-hero-outline:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.3); }
+    .hero-note {
+      margin-top: 16px;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
 
-    .hero-trust {
-      margin-top: 48px;
-      display: flex; align-items: center; gap: 12px; justify-content: center;
-      font-size: 0.82rem; color: var(--clr-text-dim);
-      animation: fadeUp 0.7s 0.4s ease both;
+    /* Hero Visual */
+    .hero-visual {
+      flex: 1;
+      max-width: 520px;
     }
-    .trust-avatars { display: flex; }
-    .trust-avatar {
-      width: 30px; height: 30px; border-radius: 50%;
-      background: var(--gradient); border: 2px solid var(--clr-bg);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.7rem; font-weight: 700; color: white;
-      margin-left: -8px;
-    }
-    .trust-avatar:first-child { margin-left: 0; }
-
-    /* Preview Window */
-    .hero-preview {
-      margin-top: 64px; width: 100%; max-width: 900px;
-      animation: fadeUp 0.8s 0.5s ease both;
-      position: relative;
-    }
-    .preview-window {
-      background: var(--clr-surface);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 16px;
+    .meet-preview {
+      background: #2d2f31;
+      border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 40px 120px rgba(0,0,0,0.7), 0 0 60px rgba(124,58,237,0.2);
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
     }
-    .preview-bar {
-      background: var(--clr-surface-2);
-      padding: 12px 16px;
-      display: flex; align-items: center; gap: 8px;
-      border-bottom: 1px solid var(--clr-border);
+    .meet-preview-header {
+      background: #202124;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
-    .preview-dot { width: 12px; height: 12px; border-radius: 50%; }
-    .preview-dot.red { background: #ef4444; }
-    .preview-dot.yellow { background: #f59e0b; }
-    .preview-dot.green { background: #10b981; }
-    .preview-url {
-      flex: 1; text-align: center; font-size: 0.75rem;
-      color: var(--clr-text-dim); background: rgba(255,255,255,0.04);
-      padding: 4px 12px; border-radius: 6px; max-width: 300px; margin: 0 auto;
+    .meet-preview-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    .preview-body {
-      display: grid; grid-template-columns: 220px 1fr;
-      height: 360px;
-    }
-    .preview-sidebar {
-      background: #0c0c1a; border-right: 1px solid var(--clr-border);
-      padding: 12px 10px;
-      display: flex; flex-direction: column; gap: 6px;
-    }
-    .preview-team {
-      display: flex; align-items: center; gap: 8px;
-      padding: 8px 10px; border-radius: 8px;
-      font-size: 0.78rem; font-weight: 600;
-    }
-    .preview-team.active { background: rgba(124,58,237,0.2); color: #a78bfa; }
-    .preview-team:not(.active) { color: #555577; }
-    .preview-team-icon {
-      width: 28px; height: 28px; border-radius: 7px;
-      background: var(--gradient); display: flex; align-items: center;
-      justify-content: center; font-size: 0.65rem; font-weight: 800; color: white;
-      flex-shrink: 0;
-    }
-    .preview-chat { padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
-    .preview-msg { display: flex; gap: 8px; align-items: flex-start; }
-    .preview-msg.own { flex-direction: row-reverse; }
-    .preview-avatar {
-      width: 26px; height: 26px; border-radius: 50%;
-      background: var(--gradient); flex-shrink: 0;
+    .meet-logo-sm {
+      width: 28px; height: 28px;
+      background: var(--primary);
+      border-radius: 7px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 0.65rem; font-weight: 700; color: white;
     }
-    .preview-bubble {
-      padding: 8px 12px; border-radius: 12px;
-      font-size: 0.75rem; line-height: 1.5; max-width: 200px;
-      background: #1a1a2e; border: 1px solid rgba(255,255,255,0.07);
-      color: #ccc;
+    .preview-title { font-size: 0.84rem; font-weight: 500; color: var(--text); }
+    .preview-timer {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      background: rgba(255,255,255,0.07);
+      padding: 3px 10px;
+      border-radius: 999px;
     }
-    .preview-msg.own .preview-bubble { background: rgba(124,58,237,0.3); border-color: rgba(124,58,237,0.4); color: #ddd; }
-    .preview-typing {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 0.7rem; color: #555577; padding-left: 34px;
+    .meet-preview-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      padding: 12px;
+      background: #202124;
     }
-    .preview-typing-dot { width: 5px; height: 5px; border-radius: 50%; background: #555577; animation: previewDot 1.2s infinite; }
-    .preview-typing-dot:nth-child(2) { animation-delay: 0.2s; }
-    .preview-typing-dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes previewDot { 0%,100%{opacity:0.3} 50%{opacity:1} }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(24px); }
-      to { opacity: 1; transform: translateY(0); }
+    .preview-tile {
+      aspect-ratio: 16/9;
+      background: #3c4043;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      overflow: hidden;
     }
+    .preview-tile.active { box-shadow: 0 0 0 2px var(--success); }
+    .preview-avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: white;
+    }
+    .preview-name {
+      position: absolute;
+      bottom: 7px; left: 8px;
+      background: rgba(0,0,0,0.6);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.65rem;
+      font-weight: 500;
+    }
+    .preview-mic-off {
+      position: absolute;
+      top: 7px; right: 7px;
+      width: 22px; height: 22px;
+      background: rgba(234,67,53,0.9);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .meet-preview-controls {
+      background: #202124;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .preview-ctrl {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: #3c4043;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .preview-ctrl.danger { background: var(--danger); }
+    .preview-ctrl.muted { background: var(--danger); }
 
     /* ===== FEATURES ===== */
-    .section { padding: 100px 6%; }
+    .features {
+      padding: 100px 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
     .section-label {
-      text-align: center; font-size: 0.8rem; font-weight: 700;
-      letter-spacing: 0.15em; text-transform: uppercase;
-      color: var(--clr-primary-light); margin-bottom: 14px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #8ab4f8;
+      margin-bottom: 12px;
     }
     .section-title {
-      text-align: center; font-size: clamp(2rem, 4vw, 3rem);
-      font-weight: 800; line-height: 1.2; letter-spacing: -0.03em;
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
       margin-bottom: 14px;
     }
-    .section-subtitle {
-      text-align: center; color: var(--clr-text-muted);
-      font-size: 1.05rem; max-width: 520px; margin: 0 auto 60px; line-height: 1.7;
+    .section-sub {
+      font-size: 1rem;
+      color: var(--text-muted);
+      max-width: 540px;
+      line-height: 1.7;
+      margin-bottom: 60px;
     }
-
     .features-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px; max-width: 1100px; margin: 0 auto;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
     }
     .feature-card {
-      background: var(--clr-surface);
-      border: 1px solid var(--clr-border);
-      border-radius: 20px; padding: 32px;
-      transition: all 0.3s;
-      cursor: pointer; position: relative; overflow: hidden;
+      background: #2d2f31;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      transition: 0.2s;
     }
-    .feature-card::before {
-      content: ''; position: absolute; inset: 0;
-      background: var(--gradient); opacity: 0;
-      transition: opacity 0.3s;
+    .feature-card:hover {
+      border-color: rgba(26,115,232,0.3);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.3);
     }
-    .feature-card:hover { transform: translateY(-4px); border-color: rgba(124,58,237,0.4); box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
-    .feature-card:hover::before { opacity: 0.04; }
-
     .feature-icon {
-      width: 52px; height: 52px;
+      width: 48px; height: 48px;
       border-radius: 14px;
       display: flex; align-items: center; justify-content: center;
-      margin-bottom: 20px; position: relative; z-index: 1;
+      margin-bottom: 18px;
+      font-size: 1.4rem;
     }
-    .feature-card h3 {
-      font-size: 1.1rem; font-weight: 700;
-      margin-bottom: 10px; position: relative; z-index: 1;
-    }
-    .feature-card p {
-      color: var(--clr-text-muted); font-size: 0.9rem;
-      line-height: 1.7; position: relative; z-index: 1;
-    }
-    .feature-cta {
-      margin-top: 18px; display: inline-flex; align-items: center; gap: 6px;
-      font-size: 0.85rem; font-weight: 600; color: var(--clr-primary-light);
-      position: relative; z-index: 1;
-      transition: gap 0.2s;
-    }
-    .feature-card:hover .feature-cta { gap: 10px; }
+    .feature-icon.blue { background: rgba(26,115,232,0.15); }
+    .feature-icon.green { background: rgba(52,168,83,0.15); }
+    .feature-icon.yellow { background: rgba(251,188,4,0.15); }
+    .feature-icon.red { background: rgba(234,67,53,0.15); }
+    .feature-icon.purple { background: rgba(160,90,255,0.15); }
+    .feature-icon.teal { background: rgba(0,192,168,0.15); }
+    .feature-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
+    .feature-card p { font-size: 0.875rem; color: var(--text-muted); line-height: 1.6; }
 
-    /* ===== HOW IT WORKS ===== */
-    .how-section { padding: 100px 6%; background: var(--clr-surface); }
-    .steps-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 32px; max-width: 900px; margin: 0 auto;
-      position: relative;
+    /* ===== STATS ===== */
+    .stats-section {
+      background: #2d2f31;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 60px 40px;
     }
-    .steps-grid::before {
-      content: ''; position: absolute;
-      top: 32px; left: 15%; right: 15%; height: 2px;
-      background: linear-gradient(90deg, var(--clr-primary), var(--clr-accent));
-      opacity: 0.3;
+    .stats-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 40px;
+      text-align: center;
     }
-    .step {
-      text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px;
+    .stat-number {
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: #8ab4f8;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
     }
-    .step-num {
-      width: 64px; height: 64px; border-radius: 50%;
-      background: var(--gradient);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.3rem; font-weight: 900; color: white;
-      box-shadow: 0 8px 30px rgba(124,58,237,0.4);
-      position: relative; z-index: 1;
-    }
-    .step h4 { font-size: 1rem; font-weight: 700; }
-    .step p { font-size: 0.875rem; color: var(--clr-text-muted); line-height: 1.6; }
+    .stat-label { font-size: 0.875rem; color: var(--text-muted); }
 
-    /* ===== CTA SECTION ===== */
+    /* ===== CTA ===== */
     .cta-section {
-      padding: 100px 6%; text-align: center;
-      position: relative; overflow: hidden;
+      padding: 100px 40px;
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto;
     }
-    .cta-card {
-      background: var(--clr-surface);
-      border: 1px solid rgba(124,58,237,0.3);
-      border-radius: 32px; padding: 80px 40px;
-      max-width: 700px; margin: 0 auto;
-      position: relative; overflow: hidden;
-      box-shadow: 0 0 80px rgba(124,58,237,0.12);
+    .cta-section h2 {
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
     }
-    .cta-card-orb {
-      position: absolute; width: 300px; height: 300px;
-      border-radius: 50%; filter: blur(60px);
-      background: rgba(124,58,237,0.25); top: -100px; right: -100px;
-    }
-    .cta-card h2 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900; line-height: 1.2; letter-spacing: -0.03em; margin-bottom: 16px; }
-    .cta-card p { color: var(--clr-text-muted); font-size: 1rem; margin-bottom: 36px; }
-    .cta-btn-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .cta-section p { font-size: 1rem; color: var(--text-muted); margin-bottom: 36px; line-height: 1.7; }
+    .cta-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
     /* ===== FOOTER ===== */
-    .footer {
-      padding: 32px 6%;
-      border-top: 1px solid var(--clr-border);
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 12px;
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1200px;
+      margin: 0 auto;
     }
-    .footer-brand { display: flex; align-items: center; gap: 8px; font-size: 0.875rem; font-weight: 600; }
-    .footer-copy { font-size: 0.8rem; color: var(--clr-text-dim); }
+    .footer-brand { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 500; }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-link { font-size: 0.8rem; color: var(--text-dim); transition: 0.15s; }
+    .footer-link:hover { color: var(--text-muted); }
 
-    /* ===== RESPONSIVE ===== */
-    @media (max-width: 640px) {
-      .nav-links .nav-link { display: none; }
-      .hero-cta-row { flex-direction: column; align-items: stretch; text-align: center; }
-      .btn-hero-primary, .btn-hero-secondary { justify-content: center; }
-      .preview-body { grid-template-columns: 1fr; }
-      .preview-sidebar { display: none; }
-      .steps-grid::before { display: none; }
+    @media (max-width: 900px) {
+      .hero { flex-direction: column; padding: 40px 24px; gap: 40px; }
+      .hero-visual { max-width: 100%; width: 100%; }
+      .features { padding: 60px 24px; }
+      .features-grid { grid-template-columns: 1fr 1fr; }
+      .stats-inner { grid-template-columns: repeat(2, 1fr); }
+      .navbar { padding: 0 24px; }
+      .nav-links { gap: 4px; }
+    }
+    @media (max-width: 600px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .stats-inner { grid-template-columns: 1fr 1fr; }
+      .hero h1 { font-size: 2rem; }
+      footer { flex-direction: column; gap: 16px; text-align: center; }
+      .footer-links { flex-wrap: wrap; justify-content: center; }
     }
   </style>
 </head>
 <body>
 
-  <!-- ===== NAVBAR ===== -->
+  <!-- NAVBAR -->
   <nav class="navbar">
-    <div class="nav-brand">
+    <a href="/" class="nav-brand">
       <div class="nav-logo">
         <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
           <path d="M8 20V12l6 4-6 4z" fill="white"/>
-          <path d="M16 12h8v8h-8z" fill="white" opacity="0.75"/>
+          <path d="M16 12h8v8h-8z" fill="white" opacity="0.8"/>
         </svg>
       </div>
-      <span class="nav-name">CollabHub</span>
-    </div>
+      CollabHub
+    </a>
     <div class="nav-links">
       <a href="#features" class="nav-link">Features</a>
-      <a href="#how-it-works" class="nav-link">How it works</a>
-      <button class="btn-nav-login" onclick="goToAuth('login')">Login</button>
-      <button class="btn-nav-cta" onclick="goToAuth('signup')">Get Started Free</button>
+      <a href="#" class="nav-link">Pricing</a>
+      <a href="pages/auth/auth.html" class="btn-nav-outline">Sign in</a>
+      <a href="pages/auth/auth.html" class="btn-nav-primary">Get started — free</a>
     </div>
   </nav>
 
-  <!-- ===== HERO ===== -->
-  <section class="hero">
-    <div class="hero-bg">
-      <div class="hero-grid"></div>
-      <div class="hero-orb orb-1"></div>
-      <div class="hero-orb orb-2"></div>
-      <div class="hero-orb orb-3"></div>
-    </div>
-
-    <div class="hero-badge">
-      <div class="badge-dot"></div>
-      Live real-time collaboration
-    </div>
-
-    <h1 class="hero-title">
-      Your team.<br/>
-      <span class="gradient-text">Connected,</span>
-      <span class="gradient-text-warm"> always.</span>
-    </h1>
-
-    <p class="hero-subtitle">
-      CollabHub brings your team together with instant messaging, HD video calls, and seamless file sharing — all in one beautiful workspace.
-    </p>
-
-    <div class="hero-cta-row">
-      <button class="btn-hero-primary" onclick="goToAuth('signup')">
-        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-        Start for Free
-      </button>
-      <button class="btn-hero-secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">
-        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-        See Features
-      </button>
-    </div>
-
-    <div class="hero-trust">
-      <div class="trust-avatars">
-        <div class="trust-avatar">K</div>
-        <div class="trust-avatar" style="background:linear-gradient(135deg,#3b82f6,#06b6d4)">R</div>
-        <div class="trust-avatar" style="background:linear-gradient(135deg,#10b981,#3b82f6)">A</div>
-        <div class="trust-avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">S</div>
-        <div class="trust-avatar" style="background:linear-gradient(135deg,#ec4899,#7c3aed)">M</div>
-      </div>
-      Trusted by teams worldwide
-    </div>
-
-    <!-- App Preview Window -->
-    <div class="hero-preview">
-      <div class="preview-window">
-        <div class="preview-bar">
-          <div class="preview-dot red"></div>
-          <div class="preview-dot yellow"></div>
-          <div class="preview-dot green"></div>
-          <div class="preview-url">collabhub.app/dashboard</div>
+  <!-- HERO -->
+  <section style="background:var(--bg);">
+    <div class="hero">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span></span>
+          Now with HD video and real-time collaboration
         </div>
-        <div class="preview-body">
-          <div class="preview-sidebar">
-            <div style="font-size:0.65rem;letter-spacing:0.1em;color:#444466;padding:4px 10px 8px;text-transform:uppercase;font-weight:700;">Teams</div>
-            <div class="preview-team active">
-              <div class="preview-team-icon">DE</div> Design Team
+        <h1>Video calls and meetings <span class="highlight">for everyone</span></h1>
+        <p>Connect, collaborate, and celebrate from anywhere. CollabHub provides secure, high-quality video meetings with built-in team chat, file sharing, and more.</p>
+        <div class="hero-actions">
+          <a href="pages/auth/auth.html" class="btn-hero-primary">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82V15.18a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            New meeting
+          </a>
+          <a href="pages/auth/auth.html" class="btn-hero-outline">
+            Sign in
+          </a>
+        </div>
+        <p class="hero-note">Free for personal use · No software to install</p>
+      </div>
+
+      <!-- Mock Google Meet UI Preview -->
+      <div class="hero-visual">
+        <div class="meet-preview">
+          <div class="meet-preview-header">
+            <div class="meet-preview-header-left">
+              <div class="meet-logo-sm">
+                <svg width="14" height="14" viewBox="0 0 32 32" fill="none">
+                  <path d="M8 20V12l6 4-6 4z" fill="white"/>
+                  <path d="M16 12h8v8h-8z" fill="white" opacity="0.8"/>
+                </svg>
+              </div>
+              <span class="preview-title">Team standup</span>
             </div>
-            <div class="preview-team">
-              <div class="preview-team-icon" style="background:linear-gradient(135deg,#3b82f6,#06b6d4)">BE</div> Backend
+            <div class="preview-timer">12:34</div>
+          </div>
+          <div class="meet-preview-grid">
+            <div class="preview-tile active">
+              <div class="preview-avatar" style="background:#1a73e8;">K</div>
+              <span class="preview-name">Kuwarji (You)</span>
             </div>
-            <div class="preview-team">
-              <div class="preview-team-icon" style="background:linear-gradient(135deg,#10b981,#3b82f6)">MK</div> Marketing
+            <div class="preview-tile">
+              <div class="preview-avatar" style="background:#34a853;">P</div>
+              <span class="preview-name">Priya</span>
+              <div class="preview-mic-off">
+                <svg width="10" height="10" fill="white" viewBox="0 0 24 24"><path d="M19 11a7 7 0 01-14 0m7 7v4m-4 0h8M12 1a3 3 0 00-3 3v6a3 3 0 006 0V4a3 3 0 00-3-3z"/></svg>
+              </div>
             </div>
-            <div style="margin-top:auto;padding:10px 0;">
-              <div style="height:1px;background:rgba(255,255,255,0.06);margin-bottom:10px;"></div>
-              <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;">
-                <div class="preview-avatar">Y</div>
-                <div style="font-size:0.72rem;color:#666688;font-weight:600;">You</div>
-                <div style="margin-left:auto;width:7px;height:7px;border-radius:50%;background:#10b981;box-shadow:0 0 6px #10b981;"></div>
+            <div class="preview-tile">
+              <div class="preview-avatar" style="background:#ea4335;">R</div>
+              <span class="preview-name">Rahul</span>
+            </div>
+            <div class="preview-tile">
+              <div class="preview-avatar" style="background:#fbbc04;">S</div>
+              <span class="preview-name">Sara</span>
+              <div class="preview-mic-off">
+                <svg width="10" height="10" fill="white" viewBox="0 0 24 24"><path d="M19 11a7 7 0 01-14 0m7 7v4m-4 0h8M12 1a3 3 0 00-3 3v6a3 3 0 006 0V4a3 3 0 00-3-3z"/></svg>
               </div>
             </div>
           </div>
-          <div class="preview-chat">
-            <div class="preview-msg">
-              <div class="preview-avatar" style="background:linear-gradient(135deg,#3b82f6,#06b6d4)">R</div>
-              <div class="preview-bubble">Hey! The new designs look 🔥</div>
+          <div class="meet-preview-controls">
+            <div class="preview-ctrl muted">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="white"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
             </div>
-            <div class="preview-msg">
-              <div class="preview-avatar" style="background:linear-gradient(135deg,#10b981,#3b82f6)">A</div>
-              <div class="preview-bubble">Agreed! Let's hop on a quick call?</div>
+            <div class="preview-ctrl">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="white"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82V15.18a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
             </div>
-            <div class="preview-msg own">
-              <div class="preview-avatar">Y</div>
-              <div class="preview-bubble">Sure! Starting video call now 📹</div>
+            <div class="preview-ctrl">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="white"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
             </div>
-            <div class="preview-msg">
-              <div class="preview-avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">S</div>
-              <div class="preview-bubble">Joining in 2 mins! 👍</div>
-            </div>
-            <div class="preview-typing">
-              <div class="preview-typing-dot"></div>
-              <div class="preview-typing-dot"></div>
-              <div class="preview-typing-dot"></div>
-              <span style="margin-left:4px;">Rahul is typing...</span>
+            <div class="preview-ctrl danger">
+              <svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
             </div>
           </div>
         </div>
@@ -542,193 +522,98 @@
     </div>
   </section>
 
-  <!-- ===== FEATURES ===== -->
-  <section class="section" id="features">
+  <!-- STATS -->
+  <div class="stats-section">
+    <div class="stats-inner">
+      <div>
+        <div class="stat-number">HD</div>
+        <div class="stat-label">Crystal clear video quality</div>
+      </div>
+      <div>
+        <div class="stat-number">∞</div>
+        <div class="stat-label">Unlimited team messages</div>
+      </div>
+      <div>
+        <div class="stat-number">🔒</div>
+        <div class="stat-label">End-to-end encrypted</div>
+      </div>
+      <div>
+        <div class="stat-number">0ms</div>
+        <div class="stat-label">Real-time collaboration</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section class="features" id="features">
     <div class="section-label">Everything you need</div>
-    <h2 class="section-title">Built for modern teams</h2>
-    <p class="section-subtitle">All the tools your team needs to collaborate, communicate, and create — without switching tabs.</p>
-
+    <h2 class="section-title">Built for real teams</h2>
+    <p class="section-sub">CollabHub combines the best of Google Meet, Slack, and Discord into one seamless platform — completely free.</p>
     <div class="features-grid">
-
-      <div class="feature-card" onclick="goToAuth('signup')">
-        <div class="feature-icon" style="background:rgba(124,58,237,0.2);">
-          <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-        </div>
-        <h3>Real-time Chat</h3>
-        <p>Instant messaging with your team. Edit, delete messages, share files, and see who's typing — all in real-time via Socket.io.</p>
-        <div class="feature-cta">
-          Try chat
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-        </div>
+      <div class="feature-card">
+        <div class="feature-icon blue">🎥</div>
+        <h3>HD Video Meetings</h3>
+        <p>Crystal clear video calls with up to 50 participants. Google Meet style lobby, participant grid, and screen sharing.</p>
       </div>
-
-      <div class="feature-card" onclick="goToAuth('signup')">
-        <div class="feature-icon" style="background:rgba(59,130,246,0.2);">
-          <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#60a5fa" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.82V15.18a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-        </div>
-        <h3>HD Video Calls</h3>
-        <p>Crystal-clear peer-to-peer video calls powered by WebRTC. Toggle mic, camera, and share your screen with one click.</p>
-        <div class="feature-cta">
-          Start a call
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-        </div>
+      <div class="feature-card">
+        <div class="feature-icon green">💬</div>
+        <h3>Team Chat</h3>
+        <p>Real-time messaging with file sharing, emoji reactions, message editing, and organized team channels.</p>
       </div>
-
-      <div class="feature-card" onclick="goToAuth('signup')">
-        <div class="feature-icon" style="background:rgba(16,185,129,0.2);">
-          <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#34d399" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-        </div>
-        <h3>Team Management</h3>
-        <p>Create teams, share invite codes, and manage your workspace. Join multiple teams and switch between them instantly.</p>
-        <div class="feature-cta">
-          Create a team
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-        </div>
-      </div>
-
-      <div class="feature-card" onclick="goToAuth('signup')">
-        <div class="feature-icon" style="background:rgba(245,158,11,0.2);">
-          <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#fbbf24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
-        </div>
-        <h3>File Sharing</h3>
-        <p>Send documents, images, and files directly in your team chat. Everything is organized and accessible to your whole team.</p>
-        <div class="feature-cta">
-          Share files
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-        </div>
-      </div>
-
-      <div class="feature-card" onclick="goToAuth('signup')">
-        <div class="feature-icon" style="background:rgba(236,72,153,0.2);">
-          <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#f472b6" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-        </div>
-        <h3>Notifications</h3>
-        <p>Never miss an important message. Smart notifications keep you in the loop without overwhelming your workflow.</p>
-        <div class="feature-cta">
-          Stay updated
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-        </div>
-      </div>
-
-      <div class="feature-card" onclick="goToAuth('signup')">
-        <div class="feature-icon" style="background:rgba(99,102,241,0.2);">
-          <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#818cf8" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-        </div>
+      <div class="feature-card">
+        <div class="feature-icon yellow">🖥️</div>
         <h3>Screen Sharing</h3>
-        <p>Share your screen during video calls to present ideas, debug code, or walk through documents with your entire team.</p>
-        <div class="feature-cta">
-          Share screen
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-        </div>
+        <p>Share your entire screen or a specific window during meetings. Perfect for presentations and demos.</p>
       </div>
-
-    </div>
-  </section>
-
-  <!-- ===== HOW IT WORKS ===== -->
-  <section class="how-section" id="how-it-works">
-    <div class="section-label">Simple to start</div>
-    <h2 class="section-title">Get started in minutes</h2>
-    <p class="section-subtitle">No complicated setup. Just sign up, create your team, and start collaborating.</p>
-
-    <div class="steps-grid">
-      <div class="step">
-        <div class="step-num">1</div>
-        <h4>Sign Up Free</h4>
-        <p>Create your account in seconds. No credit card required.</p>
+      <div class="feature-card">
+        <div class="feature-icon red">🔔</div>
+        <h3>Smart Notifications</h3>
+        <p>Never miss a message or call. Get real-time alerts for team activity, mentions, and incoming calls.</p>
       </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <h4>Create or Join a Team</h4>
-        <p>Start a new team or join one with an invite code from a teammate.</p>
+      <div class="feature-card">
+        <div class="feature-icon purple">👥</div>
+        <h3>Team Management</h3>
+        <p>Create teams, invite members with codes, manage roles, and keep your workspace organized.</p>
       </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <h4>Chat & Call</h4>
-        <p>Send messages, share files, and start video calls instantly.</p>
-      </div>
-      <div class="step">
-        <div class="step-num">4</div>
-        <h4>Collaborate!</h4>
-        <p>Build things together with your team in real-time.</p>
+      <div class="feature-card">
+        <div class="feature-icon teal">🔍</div>
+        <h3>Powerful Search</h3>
+        <p>Instantly search through messages, files, and team members. Find anything in seconds.</p>
       </div>
     </div>
   </section>
 
-  <!-- ===== CTA ===== -->
+  <!-- CTA -->
   <section class="cta-section">
-    <div class="cta-card">
-      <div class="cta-card-orb"></div>
-      <h2>Ready to bring your<br/><span style="background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">team together?</span></h2>
-      <p>Join thousands of teams already collaborating on CollabHub. Free to start, no credit card needed.</p>
-      <div class="cta-btn-row">
-        <button class="btn-hero-primary" onclick="goToAuth('signup')">
-          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-          Get Started Free
-        </button>
-        <button class="btn-hero-secondary" onclick="goToAuth('login')">
-          Already have an account? Login →
-        </button>
-      </div>
+    <h2>Ready to collaborate?</h2>
+    <p>Join thousands of teams already using CollabHub for their daily standups, project meetings, and team communication.</p>
+    <div class="cta-buttons">
+      <a href="pages/auth/auth.html" class="btn-hero-primary">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82V15.18a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+        Start a meeting
+      </a>
+      <a href="pages/auth/auth.html" class="btn-hero-outline">Sign in</a>
     </div>
   </section>
 
-  <!-- ===== FOOTER ===== -->
-  <footer class="footer">
+  <!-- FOOTER -->
+  <footer>
     <div class="footer-brand">
       <div class="nav-logo" style="width:28px;height:28px;border-radius:8px;">
-        <svg width="16" height="16" viewBox="0 0 32 32" fill="none">
+        <svg width="14" height="14" viewBox="0 0 32 32" fill="none">
           <path d="M8 20V12l6 4-6 4z" fill="white"/>
-          <path d="M16 12h8v8h-8z" fill="white" opacity="0.75"/>
+          <path d="M16 12h8v8h-8z" fill="white" opacity="0.8"/>
         </svg>
       </div>
       CollabHub
     </div>
-    <div class="footer-copy">© 2025 CollabHub. Built with ❤️ for teams.</div>
+    <div class="footer-links">
+      <a href="#" class="footer-link">Privacy</a>
+      <a href="#" class="footer-link">Terms</a>
+      <a href="#" class="footer-link">Support</a>
+    </div>
+    <p style="font-size:0.78rem;color:var(--text-dim);">© 2026 CollabHub</p>
   </footer>
 
-  <script>
-    // Redirect to auth page
-    function goToAuth(tab) {
-      window.location.href = `pages/auth/auth.html?tab=${tab}`;
-    }
-
-    // Navbar scroll effect
-    window.addEventListener('scroll', () => {
-      const nb = document.querySelector('.navbar');
-      if (window.scrollY > 20) {
-        nb.style.background = 'rgba(6,6,15,0.95)';
-      } else {
-        nb.style.background = 'rgba(6,6,15,0.8)';
-      }
-    });
-
-    // Intersection Observer for fade-in on scroll
-    // Fallback: make everything visible after 300ms in case observer doesn't fire (file:// protocol)
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.style.opacity = '1';
-          e.target.style.transform = 'translateY(0)';
-          observer.unobserve(e.target);
-        }
-      });
-    }, { threshold: 0.05, rootMargin: '0px 0px -20px 0px' });
-
-    document.querySelectorAll('.feature-card, .step').forEach(el => {
-      el.style.opacity = '0';
-      el.style.transform = 'translateY(30px)';
-      el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-      observer.observe(el);
-    });
-
-    // Safety fallback — if observer doesn't fire within 500ms, show everything
-    setTimeout(() => {
-      document.querySelectorAll('.feature-card, .step').forEach(el => {
-        el.style.opacity = '1';
-        el.style.transform = 'translateY(0)';
-      });
-    }, 500);
-  </script>
 </body>
 </html>
