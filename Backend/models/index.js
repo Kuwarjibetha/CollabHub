@@ -3,6 +3,7 @@ const User = require("./User/User");
 const Team = require("./Team/Team");
 const TeamMember = require("./TeamMember/TeamMember");
 const Message = require("./Message/Message");
+const Notification = require("./Notification/Notification");  
 
 
 User.belongsToMany(Team, { through: TeamMember, foreignKey: "userId" }); // Ek User multiple Teams me ho sakta hai, aur woh connection TeamMember table se hota hai
@@ -26,10 +27,15 @@ Team.hasMany(Message, { foreignKey: "teamId" });
 
 User.hasMany(Message, { foreignKey: "senderId" });
 
+// 👇 2. naya — Notification associations
+Notification.belongsTo(User, { foreignKey: "userId" });   // Har notification ka ek recipient (User) hota hai
+User.hasMany(Notification, { foreignKey: "userId" });      // Ek User ki multiple notifications ho sakti hain
+
 module.exports = {
   sequelize,
   User,
   Team,
   TeamMember,
-  Message
+  Message,
+  Notification  
 };

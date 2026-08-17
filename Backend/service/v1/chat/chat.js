@@ -1,4 +1,5 @@
 const { Message, User, TeamMember } = require("../../../models");
+const { enqueueNotificationJob } = require("../../../workflow");
 
 // check user
 async function verifyTeamMembership(userId, teamId) {
@@ -23,7 +24,6 @@ async function sendMessage(
     throw error;
   }
 
-
   const message = await Message.create({
     senderId: userId,
     teamId,
@@ -35,17 +35,20 @@ async function sendMessage(
   });
 
   const fullMessage = await Message.findByPk(message.id, {
-    include: [{ model: User, as: "sender", attributes: ["id", "name", "profilePic"] },
-  ],
+    include: [{ model: User, as: "sender", attributes: ["id", "name", "profilePic"] }],
+  });
+
+  enqueueNotificationJob({
+    teamId,
+    excludeUserId: userId,
+    type: "message",
+    title: `New message from ${fullMessage.sender.name}`,
+    content: content ? content.substring(0, 50) : "Sent a file",
+    relatedId: teamId,
   });
 
   return fullMessage;
 }
-
-
-
-
-
 
 // get chat history
 async function getChatHistory(userId, teamId, { limit = 50, offset = 0 }) {
@@ -64,7 +67,7 @@ async function getChatHistory(userId, teamId, { limit = 50, offset = 0 }) {
   return messages.reverse();
 }
 
-// edit mess
+// edit message
 async function editMessage(userId, messageId, { content }) {
   const message = await Message.findByPk(messageId);
 
@@ -75,7 +78,6 @@ async function editMessage(userId, messageId, { content }) {
   }
 
   if (message.senderId !== userId) {
-    // Sirf apna hi message edit kar sakte ho, doosre ka nahi
     const error = new Error("You can only edit your own messages");
     error.statusCode = 403;
     throw error;
@@ -105,7 +107,7 @@ async function deleteMessage(userId, messageId) {
   }
 
   message.isDeleted = true;
-  message.content = "This message was deleted"; // original content hata diya
+  message.content = "This message was deleted";
   await message.save();
 
   return { message: "Message deleted" };

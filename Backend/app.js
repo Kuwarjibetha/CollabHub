@@ -5,10 +5,13 @@ const http = require("http");
 const { sequelize } = require("./models");
 const v1Routes = require("./routes/v1");
 const initSocket = require("./sockets");
+const { startWorkflows } = require("./workflow");
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "*",
+}));
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
@@ -26,6 +29,8 @@ async function start() {
 
     await sequelize.sync({ alter: true });
     console.log("Database synced...");
+
+    startWorkflows();
 
     const PORT = process.env.PORT || 5000;
 

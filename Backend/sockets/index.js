@@ -8,7 +8,7 @@ const registerCallHandlers = require("./call");
 function initSocket(httpServer) {
   const io = new Server(httpServer, {
     cors: {
-      origin: "*", 
+      origin: process.env.FRONTEND_URL || "*",
     },
   });
 
