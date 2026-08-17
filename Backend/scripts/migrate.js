@@ -27,6 +27,7 @@ const pgDb = new Sequelize(supabaseUrl, {
   },
 });
 
+
 // 3. Import Models on Postgres
 const {
   sequelize,
