@@ -191,7 +191,7 @@
         res  = await fetch(`${CONFIG.API_BASE}${endpoint}`, { ...options, headers });
         data = await res.json();
       } catch (networkErr) {
-        throw new Error("Cannot connect to server. Make sure backend is running on port 5000.");
+        throw new Error("Backend server is starting up. Please wait 15-30 seconds and click Sign In/Up again.");
       }
 
       if (!res.ok) {

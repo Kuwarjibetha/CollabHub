@@ -28,12 +28,17 @@ async function apiFetch(endpoint, options = {}) {
   const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const res = await fetch(`${CONFIG.API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  let res, data;
+  try {
+    res = await fetch(`${CONFIG.API_BASE}${endpoint}`, {
+      ...options,
+      headers,
+    });
+    data = await res.json();
+  } catch (err) {
+    throw new Error("Backend server is starting up. Please wait 15-30 seconds and try again.");
+  }
 
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Request failed");
+  if (!res.ok) throw new Error(data?.message || "Request failed");
   return data;
 }
