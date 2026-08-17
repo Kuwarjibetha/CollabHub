@@ -1,6 +1,10 @@
+const BACKEND_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+  ? "http://localhost:5000"
+  : "https://collabhub-qvx3.onrender.com";
+
 const CONFIG = {
-  API_BASE: "http://localhost:5000/api/v1",
-  SOCKET_URL: "http://localhost:5000",
+  API_BASE: `${BACKEND_URL}/api/v1`,
+  SOCKET_URL: BACKEND_URL,
 };
 
 // Token helpers
