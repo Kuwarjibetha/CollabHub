@@ -90,24 +90,27 @@ function initUI() {
 
 function updateAdminVisibility() {
   const currentUser = Auth.getUser() || user || {};
-  const isOwner = currentTeam && (currentTeam.ownerId || currentTeam.createdBy) && (String(currentTeam.ownerId || currentTeam.createdBy) === String(currentUser.id || currentUser.userId));
-  const isSystemAdmin = currentUser.role === 'admin' || true;
-  const isTeamAdmin = isOwner || currentTeam?.myRole === 'admin' || true;
+  const currentUserId = currentUser.id || currentUser.userId;
+  const isSuperAdmin = currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'admin';
+  const isOwner = currentTeam && (currentTeam.createdBy || currentTeam.ownerId) && (String(currentTeam.createdBy || currentTeam.ownerId) === String(currentUserId));
+  const isTeamAdmin = isSuperAdmin || isOwner || (currentTeam?.myRole === 'TEAM_ADMIN' || currentTeam?.myRole === 'admin');
 
+  // SUPER_ADMIN only sees Global Admin Console controls
   const adminBtn = document.getElementById("btn-admin-console");
-  if (adminBtn) adminBtn.style.display = "flex";
+  if (adminBtn) adminBtn.style.display = isSuperAdmin ? "flex" : "none";
 
   const adminCta = document.getElementById("admin-panel-cta");
-  if (adminCta) adminCta.style.display = "block";
+  if (adminCta) adminCta.style.display = isSuperAdmin ? "block" : "none";
 
   const navAdmin = document.getElementById("nav-admin");
-  if (navAdmin) navAdmin.style.display = "flex";
+  if (navAdmin) navAdmin.style.display = isSuperAdmin ? "flex" : "none";
 
+  // TEAM_ADMIN (and SUPER_ADMIN) see Team-level Admin controls when active team is selected
   const teamAdminBtn = document.getElementById("btn-team-admin-settings");
-  if (teamAdminBtn) teamAdminBtn.style.display = "flex";
+  if (teamAdminBtn) teamAdminBtn.style.display = (isTeamAdmin && currentTeam) ? "flex" : "none";
 
   const btnSearchAdmin = document.getElementById("btn-admin-search-bar");
-  if (btnSearchAdmin) btnSearchAdmin.style.display = "flex";
+  if (btnSearchAdmin) btnSearchAdmin.style.display = (isTeamAdmin && currentTeam) ? "flex" : "none";
 }
 
 async function openTeamAdminModal() {

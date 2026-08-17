@@ -18,8 +18,8 @@ const TeamMember = sequelize.define(
       allowNull: false,
     },
     role: {
-      type: DataTypes.ENUM("admin", "member"),
-      defaultValue: "member",
+      type: DataTypes.ENUM("TEAM_ADMIN", "MEMBER", "admin", "member"),
+      defaultValue: "MEMBER",
     },
     lastReadAt: {
       type: DataTypes.DATE,

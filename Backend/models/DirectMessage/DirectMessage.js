@@ -8,6 +8,9 @@ const DirectMessage = sequelize.define("DirectMessage", {
   content: { type: DataTypes.TEXT, allowNull: false },
   isRead: { type: DataTypes.BOOLEAN, defaultValue: false },
   isDeleted: { type: DataTypes.BOOLEAN, defaultValue: false },
-}, { tableName: "direct_messages", timestamps: true });
+}, {
+  tableName: "direct_messages",
+  timestamps: true
+});
 
 module.exports = DirectMessage;

@@ -28,8 +28,8 @@ const User = sequelize.define(
       allowNull: true,
     },
     role: {
-      type: DataTypes.ENUM("user", "admin"),
-      defaultValue: "user",
+      type: DataTypes.ENUM("SUPER_ADMIN", "MEMBER", "admin", "user"),
+      defaultValue: "MEMBER",
     },
     isBlocked: {
       type: DataTypes.BOOLEAN,

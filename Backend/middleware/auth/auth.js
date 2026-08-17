@@ -1,35 +1,33 @@
-const jwt = require("jsonwebtoken") // for token generation
+const jwt = require("jsonwebtoken");
 const { User } = require("../../models");
 
-
 // verify the token
-async function verifyToken(req,res,next){
+async function verifyToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ success: false, message: "No token provided" });
+  }
 
-    const authHeader = req.headers.authorization;   // header se authorization value nikalo 
-    if (!authHeader || !authHeader.startsWith("Bearer ")){   // 
+  try {
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findByPk(decoded.userId || decoded.id, { attributes: ["id", "isBlocked", "role"] });
+    if (!user || user.isBlocked) return res.status(403).json({ success: false, message: "This account is blocked or not found" });
 
-        return res.status(401).json({success:false, message:"No token provided"})
-    }
+    let userRole = user.role;
+    if (userRole === "admin") userRole = "SUPER_ADMIN";
+    if (userRole === "user") userRole = "MEMBER";
 
+    req.user = {
+      id: user.id,
+      userId: user.id,
+      role: userRole,
+    };
 
-    const token = authHeader.split(" ")[1]; // Bearer ko hata ke sirf actual token
-
-
-    try{
-        const decoded = jwt.verify(token, process.env.JWT_SECRET); // token verify karo ki jwt secreat wahi hai jo sign karte time use hua tha
-        const user = await User.findByPk(decoded.userId, { attributes: ["id", "isBlocked", "role"] });
-        if (!user || user.isBlocked) return res.status(403).json({success:false, message:"This account is blocked"});
-        req.user = { ...decoded, role: user.role };
-
-        next();
-    }catch(err){
-
-        return res.status(401).json({success:false, message:"Invalid or expired token"});
-    }
-
+    next();
+  } catch (err) {
+    return res.status(401).json({ success: false, message: "Invalid or expired token" });
+  }
 }
-
-
-
 
 module.exports = { verifyToken };
