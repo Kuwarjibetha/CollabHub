@@ -53,11 +53,6 @@
         <div class="badge" id="notif-badge" style="display:none;"></div>
       </div>
 
-      <!-- Admin Panel Shortcut Button -->
-      <div class="nav-item" id="nav-admin" data-tooltip="Admin Control Panel" onclick="window.location.href='../admin/dashboard.html'" style="color:var(--clr-primary);background:rgba(225,29,72,0.12);">
-        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-      </div>
-
       <div class="nav-spacer"></div>
 
       <div class="nav-avatar" id="nav-user-avatar" data-tooltip="User Profile & Settings" onclick="window.location.href='profile.html'">
@@ -71,9 +66,6 @@
         <div class="sidebar-header">
           <h2>Teams</h2>
           <div class="sidebar-actions">
-            <button class="btn-icon" id="btn-admin-console" data-tooltip="Admin Console" onclick="window.location.href='../admin/dashboard.html'" style="color:#a78bfa;display:none;">
-              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-            </button>
             <button class="btn-icon" data-tooltip="Join Team" onclick="openModal('modal-join-team')">
               <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
             </button>
@@ -81,21 +73,6 @@
               <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             </button>
           </div>
-        </div>
-        <!-- Admin Panel Dedicated Button (Only Visible to Admin) -->
-        <div id="admin-panel-cta" style="display:none;padding:10px 12px;border-bottom:1px solid var(--clr-border);">
-          <button onclick="window.location.href='../admin/dashboard.html'" style="
-            width:100%;padding:9px 14px;font-size:0.85rem;font-weight:700;
-            color:white;background:linear-gradient(135deg,#7c3aed,#ef4444);
-            border:none;border-radius:10px;cursor:pointer;
-            box-shadow:0 4px 16px rgba(124,58,237,0.35);
-            display:flex;align-items:center;justify-content:center;gap:8px;
-            transition:all 0.2s;font-family:'Inter',sans-serif;
-          " onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(124,58,237,0.5)'"
-             onmouseout="this.style.transform='none';this.style.boxShadow='0 4px 16px rgba(124,58,237,0.35)'">
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-            🛡️ Admin Control Panel
-          </button>
         </div>
 
         <div class="sidebar-search">
