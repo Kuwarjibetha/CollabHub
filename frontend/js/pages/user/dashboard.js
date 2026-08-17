@@ -43,9 +43,19 @@ async function init() {
   if (!user) return logout();
   initUI();
   connectSocket();
-  await loadTeams();
-  fetchAndRenderNotifications();
-  hideLoading();
+
+  // Fallback: Hide loading screen within 2.5s max so user is never stuck
+  const timeout = setTimeout(() => hideLoading(), 2500);
+
+  try {
+    await loadTeams();
+    fetchAndRenderNotifications();
+  } catch (err) {
+    console.warn("Initial data load delay/error:", err);
+  } finally {
+    clearTimeout(timeout);
+    hideLoading();
+  }
 }
 
 function initUI() {
