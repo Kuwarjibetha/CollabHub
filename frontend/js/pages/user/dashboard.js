@@ -102,10 +102,16 @@ function updateAdminVisibility() {
   const currentUser = Auth.getUser() || user || {};
   const currentUserId = currentUser.id || currentUser.userId;
   const isSuperAdmin = currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'admin';
-  const isOwner = currentTeam && (currentTeam.createdBy || currentTeam.ownerId) && (String(currentTeam.createdBy || currentTeam.ownerId) === String(currentUserId));
-  const isTeamAdmin = isSuperAdmin || isOwner || (currentTeam?.myRole === 'TEAM_ADMIN' || currentTeam?.myRole === 'admin');
 
-  // SUPER_ADMIN only sees Global Admin Console controls
+  // Team owner = the person who created the team (createdBy field)
+  const isOwner = currentTeam &&
+    (currentTeam.createdBy || currentTeam.ownerId) &&
+    (String(currentTeam.createdBy || currentTeam.ownerId) === String(currentUserId));
+
+  // Only owner or SUPER_ADMIN is team admin — regular members (myRole=member) are NOT admins
+  const isTeamAdmin = isOwner || isSuperAdmin;
+
+  // Global Admin Panel — only SUPER_ADMIN
   const adminBtn = document.getElementById("btn-admin-console");
   if (adminBtn) adminBtn.style.display = isSuperAdmin ? "flex" : "none";
 
@@ -115,7 +121,7 @@ function updateAdminVisibility() {
   const navAdmin = document.getElementById("nav-admin");
   if (navAdmin) navAdmin.style.display = isSuperAdmin ? "flex" : "none";
 
-  // TEAM_ADMIN (and SUPER_ADMIN) see Team-level Admin controls when active team is selected
+  // Team Admin Settings — only team owner or SUPER_ADMIN (NOT regular members)
   const teamAdminBtn = document.getElementById("btn-team-admin-settings");
   if (teamAdminBtn) teamAdminBtn.style.display = (isTeamAdmin && currentTeam) ? "flex" : "none";
 
@@ -224,7 +230,13 @@ async function removeTeamMember(userId) {
 }
 
 function hideLoading() {
-  document.getElementById("loading-screen").classList.add("hidden");
+  const screen = document.getElementById("loading-screen");
+  if (screen) {
+    screen.classList.add("hidden");
+    screen.style.display = "none";
+    screen.style.pointerEvents = "none";
+    screen.style.zIndex = "-1";
+  }
   document.getElementById("app-shell").style.display = "grid";
 }
 
