@@ -100,18 +100,9 @@ function initUI() {
 
 function updateAdminVisibility() {
   const currentUser = Auth.getUser() || user || {};
-  const currentUserId = currentUser.id || currentUser.userId;
   const isSuperAdmin = currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'admin';
 
-  // Team owner = the person who created the team (createdBy field)
-  const isOwner = currentTeam &&
-    (currentTeam.createdBy || currentTeam.ownerId) &&
-    (String(currentTeam.createdBy || currentTeam.ownerId) === String(currentUserId));
-
-  // Only owner or SUPER_ADMIN is team admin — regular members (myRole=member) are NOT admins
-  const isTeamAdmin = isOwner || isSuperAdmin;
-
-  // Global Admin Panel — only SUPER_ADMIN
+  // Global Admin Panel in left rail / nav — only SUPER_ADMIN
   const adminBtn = document.getElementById("btn-admin-console");
   if (adminBtn) adminBtn.style.display = isSuperAdmin ? "flex" : "none";
 
@@ -120,13 +111,6 @@ function updateAdminVisibility() {
 
   const navAdmin = document.getElementById("nav-admin");
   if (navAdmin) navAdmin.style.display = isSuperAdmin ? "flex" : "none";
-
-  // Team Admin Settings — only team owner or SUPER_ADMIN (NOT regular members)
-  const teamAdminBtn = document.getElementById("btn-team-admin-settings");
-  if (teamAdminBtn) teamAdminBtn.style.display = (isTeamAdmin && currentTeam) ? "flex" : "none";
-
-  const btnSearchAdmin = document.getElementById("btn-admin-search-bar");
-  if (btnSearchAdmin) btnSearchAdmin.style.display = (isTeamAdmin && currentTeam) ? "flex" : "none";
 }
 
 async function openTeamAdminModal() {
