@@ -1,5 +1,6 @@
 /* ==========================================
    CollabHub — Auth Page Styles
+   Google Meet / Google Sign-In Style
    ========================================== */
 
 .auth-body {
@@ -9,39 +10,40 @@
   min-height: 100vh;
   padding: 20px;
   overflow: hidden;
+  background: #202124;
 }
 
-/* ---- Animated BG Orbs ---- */
+/* Subtle background pattern */
 .bg-orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
 .orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
-  animation: floatOrb 8s ease-in-out infinite;
+  filter: blur(100px);
+  animation: floatOrb 10s ease-in-out infinite;
 }
 .orb-1 {
-  width: 500px; height: 500px;
-  background: rgba(225, 29, 72, 0.08);
-  top: -150px; left: -100px;
+  width: 600px; height: 600px;
+  background: rgba(26, 115, 232, 0.06);
+  top: -200px; left: -150px;
   animation-delay: 0s;
 }
 .orb-2 {
   width: 400px; height: 400px;
-  background: rgba(244, 63, 94, 0.06);
-  bottom: -100px; right: -80px;
-  animation-delay: -3s;
+  background: rgba(52, 168, 83, 0.05);
+  bottom: -100px; right: -100px;
+  animation-delay: -4s;
 }
 .orb-3 {
   width: 300px; height: 300px;
-  background: rgba(225, 29, 72, 0.04);
+  background: rgba(234, 67, 53, 0.04);
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
-  animation-delay: -6s;
+  animation-delay: -7s;
 }
 @keyframes floatOrb {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(30px, -20px) scale(1.05); }
-  66% { transform: translate(-20px, 15px) scale(0.97); }
+  33% { transform: translate(20px, -15px) scale(1.03); }
+  66% { transform: translate(-15px, 10px) scale(0.98); }
 }
 
 /* ---- Container ---- */
@@ -49,83 +51,91 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 420px;
+  max-width: 400px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
 }
 
-/* ---- Brand ---- */
-.auth-brand { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+/* ---- Brand — Google Meet Logo Style ---- */
+.auth-brand {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
 .brand-logo {
-  width: 56px; height: 56px;
-  border-radius: 16px;
+  width: 60px; height: 60px;
+  border-radius: 18px;
   display: flex; align-items: center; justify-content: center;
-  background: var(--gradient-primary);
-  box-shadow: var(--shadow-glow);
+  background: var(--clr-primary);
+  box-shadow: 0 4px 24px rgba(26,115,232,0.35);
   animation: logoPulse 3s ease-in-out infinite;
 }
 .brand-logo svg { width: 32px; height: 32px; }
 @keyframes logoPulse {
-  0%, 100% { box-shadow: 0 0 30px rgba(124,58,237,0.4); }
-  50% { box-shadow: 0 0 55px rgba(124,58,237,0.65); }
+  0%, 100% { box-shadow: 0 4px 20px rgba(26,115,232,0.3); }
+  50% { box-shadow: 0 4px 35px rgba(26,115,232,0.5); }
 }
 .brand-name {
-  font-size: 1.8rem;
-  font-weight: 800;
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: -0.03em;
+  font-size: 1.7rem;
+  font-weight: 600;
+  color: var(--clr-text);
+  letter-spacing: -0.02em;
 }
 .brand-tagline {
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   color: var(--clr-text-muted);
   font-weight: 400;
+  line-height: 1.5;
 }
 
-/* ---- Card ---- */
+/* ---- Card — Google Sign-In Card Style ---- */
 .auth-card {
   width: 100%;
-  border-radius: var(--radius-xl);
-  padding: 28px;
-  box-shadow: var(--shadow-md), var(--shadow-glow);
+  border-radius: 28px;
+  padding: 32px 28px;
+  background: #2d2f31;
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
 }
 
 /* ---- Tabs ---- */
 .auth-tabs {
   position: relative;
   display: flex;
-  background: var(--clr-surface-3);
-  border-radius: var(--radius-md);
+  background: rgba(255,255,255,0.06);
+  border-radius: 14px;
   padding: 4px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
+  gap: 4px;
 }
 .auth-tab {
   flex: 1;
-  padding: 9px;
-  font-size: 0.9rem;
-  font-weight: 600;
+  padding: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--clr-text-muted);
   border-radius: 10px;
   transition: var(--transition);
   position: relative;
   z-index: 1;
+  text-align: center;
 }
 .auth-tab.active { color: var(--clr-text); }
 .tab-indicator {
   position: absolute;
   top: 4px; left: 4px;
-  width: calc(50% - 4px);
+  width: calc(50% - 8px);
   height: calc(100% - 8px);
-  background: var(--gradient-primary);
+  background: var(--clr-primary);
   border-radius: 10px;
   transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 12px rgba(124,58,237,0.5);
+  box-shadow: 0 2px 12px rgba(26,115,232,0.4);
 }
-.tab-indicator.right { transform: translateX(100%); }
+.tab-indicator.right { transform: translateX(calc(100% + 8px)); }
 
 /* ---- Auth Form ---- */
 .auth-form { display: flex; flex-direction: column; gap: 16px; }
@@ -135,4 +145,5 @@
   font-size: 0.78rem;
   color: var(--clr-text-dim);
   text-align: center;
+  line-height: 1.6;
 }

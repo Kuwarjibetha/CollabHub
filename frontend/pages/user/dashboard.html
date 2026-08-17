@@ -7,22 +7,22 @@
   <meta name="description" content="CollabHub real-time collaboration dashboard — chat, video calls, and team management." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../css/style.css" />
   <link rel="stylesheet" href="../../css/dashboard.css" />
 </head>
 <body class="dashboard-body">
 
-  <!-- Loading Screen -->
+  <!-- Loading Screen — Google Meet Style -->
   <div class="loading-screen" id="loading-screen">
     <div class="loading-logo">
       <svg width="36" height="36" viewBox="0 0 32 32" fill="none">
         <path d="M8 20V12l6 4-6 4z" fill="white"/>
-        <path d="M16 12h8v8h-8z" fill="white" opacity="0.7"/>
+        <path d="M16 12h8v8h-8z" fill="white" opacity="0.8"/>
       </svg>
     </div>
     <div class="loading-bar"></div>
-    <p style="color:var(--clr-text-dim);font-size:0.875rem;">Connecting...</p>
+    <p>Getting things ready…</p>
   </div>
 
   <!-- Toast Container -->
@@ -226,10 +226,10 @@
       <div class="right-panel-header">
         <span>Team Info</span>
       </div>
-      <div class="start-call-btn" id="btn-start-call" onclick="startCall()" style="display:none;">
+      <button class="start-call-btn" id="btn-start-call" onclick="showLobby()" style="display:none;">
         <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82V15.18a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-        Start Video Call
-      </div>
+        New meeting
+      </button>
 
       <!-- Team Admin Settings Button (Only Visible to Team Creator/Admin) -->
       <div id="btn-team-admin-settings" onclick="openTeamAdminModal()" style="
@@ -254,17 +254,50 @@
 
   </div>
 
-  <!-- ===================== VIDEO CALL OVERLAY ===================== -->
+  <!-- ===================== GOOGLE MEET LOBBY ===================== -->
+  <div class="call-lobby hidden" id="call-lobby">
+    <div class="lobby-info">
+      <h2 id="lobby-call-title">Ready to join?</h2>
+      <p id="lobby-call-subtitle">Check your audio and video before joining</p>
+    </div>
+    <div class="lobby-video-preview">
+      <video id="lobby-preview-video" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);"></video>
+      <div class="lobby-no-cam hidden" id="lobby-no-cam">
+        <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="var(--clr-text-dim)">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.069A1 1 0 0121 8.82V15.18a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+        </svg>
+        <span>Camera off</span>
+      </div>
+    </div>
+    <div class="lobby-controls">
+      <button class="lobby-ctrl-btn" id="lobby-mic-btn" onclick="toggleLobbyMic()" title="Toggle mic">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+      </button>
+      <button class="lobby-ctrl-btn" id="lobby-cam-btn" onclick="toggleLobbyCam()" title="Toggle camera">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82V15.18a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+      </button>
+      <button class="lobby-join-btn" id="lobby-join-btn" onclick="joinCallFromLobby()">Join now</button>
+      <button class="btn-secondary" onclick="cancelLobby()" style="border-radius:999px;">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ===================== VIDEO CALL OVERLAY — GOOGLE MEET STYLE ===================== -->
   <div class="call-overlay hidden" id="call-overlay">
+    <!-- Top bar -->
     <div class="call-header">
-      <div>
-        <div class="call-title" id="call-title">Video Call</div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:32px;height:32px;background:var(--clr-primary);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+            <svg width="16" height="16" viewBox="0 0 32 32" fill="none"><path d="M8 20V12l6 4-6 4z" fill="white"/><path d="M16 12h8v8h-8z" fill="white" opacity="0.8"/></svg>
+          </div>
+          <div class="call-title" id="call-title">Video Call</div>
+        </div>
         <div class="call-timer" id="call-timer">00:00</div>
       </div>
       <div class="call-header-actions">
-        <button class="btn-secondary" id="btn-unpin-video" onclick="unpinVideo()" style="display:none;">Grid View</button>
-        <button class="btn-secondary" id="btn-toggle-call-chat" onclick="toggleCallChat()">💬 Chat</button>
-        <button class="btn-secondary" onclick="endCall()">Leave Call</button>
+        <button class="btn-icon" id="btn-unpin-video" onclick="unpinVideo()" style="display:none;color:var(--clr-text-muted);" title="Grid view">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+        </button>
       </div>
     </div>
 
@@ -277,49 +310,88 @@
         </div>
       </div>
 
+      <!-- Right panel: Chat + Participants -->
       <aside class="call-chat-panel hidden" id="call-chat-panel">
         <div class="call-chat-header">
-          <span>Team Chat</span>
-          <button class="btn-icon" onclick="toggleCallChat()" title="Close chat">✕</button>
+          <span id="call-panel-title">In-call messages</span>
+          <button class="btn-icon" onclick="toggleCallChat()" title="Close">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
         </div>
-        <div class="call-messages-area" id="call-messages-area"></div>
-        <div class="call-chat-input-area">
-          <textarea id="call-chat-input" rows="1" placeholder="Message during call..." onkeydown="handleCallChatKeydown(event)"></textarea>
-          <button class="btn-primary" onclick="sendCallMessage()" style="padding:8px 12px;">Send</button>
+        <div class="call-chat-tabs">
+          <div class="call-chat-tab active" onclick="switchCallPanel('chat', this)">Chat</div>
+          <div class="call-chat-tab" onclick="switchCallPanel('people', this)">People</div>
+        </div>
+        <!-- Chat tab -->
+        <div id="call-chat-tab-content">
+          <div class="call-messages-area" id="call-messages-area"></div>
+          <div class="call-chat-input-area">
+            <textarea id="call-chat-input" rows="1" placeholder="Send a message..." onkeydown="handleCallChatKeydown(event)"></textarea>
+            <button id="btn-send-call" onclick="sendCallMessage()" style="width:36px;height:36px;border-radius:50%;background:var(--clr-primary);border:none;color:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+            </button>
+          </div>
+        </div>
+        <!-- People tab -->
+        <div id="call-people-tab-content" style="display:none;">
+          <div class="call-participants-list" id="call-participants-list"></div>
         </div>
       </aside>
     </div>
 
+    <!-- Google Meet Bottom Controls Bar -->
     <div class="call-controls">
-      <button class="call-ctrl-btn" id="ctrl-mic" data-tooltip="Toggle Mic" onclick="toggleMic()">
+      <!-- Left info -->
+      <div class="call-controls-left">
+        <span style="font-size:0.8rem;color:var(--clr-text-muted);" id="call-time-display">00:00</span>
+        <span style="font-size:0.8rem;color:var(--clr-text-dim);">·</span>
+        <span style="font-size:0.8rem;color:var(--clr-text-muted);" id="call-name-display">Call</span>
+      </div>
+
+      <!-- Center controls -->
+      <button class="call-ctrl-btn" id="ctrl-mic" onclick="toggleMic()" title="Mute microphone">
         <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+        <span class="ctrl-label">Mic</span>
       </button>
-      <button class="call-ctrl-btn" id="ctrl-video" data-tooltip="Toggle Video" onclick="toggleVideo()">
+      <button class="call-ctrl-btn" id="ctrl-video" onclick="toggleVideo()" title="Turn off camera">
         <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82V15.18a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+        <span class="ctrl-label">Camera</span>
       </button>
-      <button class="call-ctrl-btn" id="ctrl-screen" data-tooltip="Share Screen" onclick="toggleScreenShare()">
+      <button class="call-ctrl-btn" id="ctrl-screen" onclick="toggleScreenShare()" title="Share your screen">
         <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        <span class="ctrl-label">Present</span>
       </button>
-      <button class="call-ctrl-btn end-call" data-tooltip="End Call" onclick="endCall()">
+      <button class="call-ctrl-btn end-call" onclick="endCall()" title="Leave call">
         <svg width="22" height="22" fill="white" viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
+        Leave call
       </button>
+
+      <!-- Right controls -->
+      <div class="call-controls-right">
+        <button class="call-ctrl-btn" id="btn-toggle-call-chat" onclick="toggleCallChat()" title="In-call messages" style="width:44px;height:44px;">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        </button>
+        <button class="call-ctrl-btn" onclick="toggleCallPeople()" title="People" style="width:44px;height:44px;">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- Incoming Call Popup -->
+  <!-- Incoming Call Popup — Google Meet style -->
   <div class="incoming-call hidden" id="incoming-call">
     <div class="incoming-call-info">
       <div class="call-ring-icon">
         <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="white"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
       </div>
       <div class="incoming-call-text">
-        <h4 id="incoming-caller-name">Someone</h4>
-        <p>Incoming video call...</p>
+        <h4 id="incoming-caller-name">Incoming call</h4>
+        <p>Video call invitation</p>
       </div>
     </div>
     <div class="incoming-call-actions">
-      <button class="btn-danger" onclick="rejectCall()">Decline</button>
-      <button class="btn-primary" onclick="acceptCall()" style="font-size:0.875rem;padding:9px;">Accept</button>
+      <button class="btn-decline" onclick="rejectCall()" style="border-radius:999px;border:none;color:white;padding:10px 20px;cursor:pointer;">Decline</button>
+      <button class="btn-accept" onclick="acceptCall()" style="border-radius:999px;border:none;color:white;padding:10px 20px;cursor:pointer;">Accept</button>
     </div>
   </div>
 

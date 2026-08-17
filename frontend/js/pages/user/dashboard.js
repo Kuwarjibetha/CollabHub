@@ -990,25 +990,124 @@ function createSyntheticStream() {
   return canvas.captureStream(30);
 }
 
-async function startCall(announce = true) {
+// ============ LOBBY — Google Meet style pre-join screen ============
+let lobbyMicEnabled = true;
+let lobbyCamEnabled = true;
+let lobbyStream = null;
+
+async function showLobby() {
+  if (!currentTeam) {
+    showToast("Select Team", "Please select a team first to start a video call.", "info");
+    return;
+  }
+  const lobby = document.getElementById("call-lobby");
+  if (!lobby) { await startCall(); return; }
+  document.getElementById("lobby-call-title").textContent = "Ready to join?";
+  document.getElementById("lobby-call-subtitle").textContent = currentTeam.name;
+  lobby.classList.remove("hidden");
+  try {
+    lobbyStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    const vid = document.getElementById("lobby-preview-video");
+    if (vid) { vid.srcObject = lobbyStream; }
+    document.getElementById("lobby-no-cam")?.classList.add("hidden");
+    lobbyCamEnabled = true; lobbyMicEnabled = true;
+  } catch {
+    document.getElementById("lobby-no-cam")?.classList.remove("hidden");
+    lobbyCamEnabled = false;
+  }
+}
+
+function toggleLobbyMic() {
+  lobbyMicEnabled = !lobbyMicEnabled;
+  if (lobbyStream) lobbyStream.getAudioTracks().forEach(t => t.enabled = lobbyMicEnabled);
+  const btn = document.getElementById("lobby-mic-btn");
+  if (btn) btn.classList.toggle("muted", !lobbyMicEnabled);
+}
+
+function toggleLobbyCam() {
+  lobbyCamEnabled = !lobbyCamEnabled;
+  if (lobbyStream) lobbyStream.getVideoTracks().forEach(t => t.enabled = lobbyCamEnabled);
+  const btn = document.getElementById("lobby-cam-btn");
+  if (btn) btn.classList.toggle("muted", !lobbyCamEnabled);
+  document.getElementById("lobby-no-cam")?.classList.toggle("hidden", lobbyCamEnabled);
+}
+
+async function joinCallFromLobby() {
+  document.getElementById("call-lobby")?.classList.add("hidden");
+  if (lobbyStream) { localStream = lobbyStream; lobbyStream = null; }
+  await startCall(true, true);
+}
+
+function cancelLobby() {
+  document.getElementById("call-lobby")?.classList.add("hidden");
+  if (lobbyStream) { lobbyStream.getTracks().forEach(t => t.stop()); lobbyStream = null; }
+}
+
+function switchCallPanel(tab, el) {
+  document.querySelectorAll(".call-chat-tab").forEach(t => t.classList.remove("active"));
+  if (el) el.classList.add("active");
+  const chatContent = document.getElementById("call-chat-tab-content");
+  const peopleContent = document.getElementById("call-people-tab-content");
+  const panelTitle = document.getElementById("call-panel-title");
+  if (tab === "chat") {
+    if (chatContent) chatContent.style.display = "";
+    if (peopleContent) peopleContent.style.display = "none";
+    if (panelTitle) panelTitle.textContent = "In-call messages";
+  } else {
+    if (chatContent) chatContent.style.display = "none";
+    if (peopleContent) peopleContent.style.display = "";
+    if (panelTitle) panelTitle.textContent = "People";
+    renderCallParticipants();
+  }
+}
+
+function renderCallParticipants() {
+  const list = document.getElementById("call-participants-list");
+  if (!list || !currentTeam) return;
+  const members = currentTeam.members || [];
+  list.innerHTML = members.map(m => `
+    <div class="call-participant-item">
+      <div class="avatar avatar-sm">${(m.name||m.email||"?").charAt(0).toUpperCase()}</div>
+      <span style="font-size:0.84rem;flex:1;">${m.name||m.email}</span>
+      <div class="call-participant-icons">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="var(--clr-success)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+      </div>
+    </div>`).join("");
+}
+
+function toggleCallPeople() {
+  const panel = document.getElementById("call-chat-panel");
+  if (!panel) return;
+  const hidden = panel.classList.contains("hidden");
+  panel.classList.toggle("hidden", !hidden);
+  if (hidden) switchCallPanel("people", document.querySelectorAll(".call-chat-tab")[1]);
+}
+// ============ END LOBBY ============
+
+async function startCall(announce = true, skipMediaSetup = false) {
   if (!currentTeam) {
     showToast("Select Team", "Please select a team first to start a video call.", "info");
     return;
   }
 
-  try {
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-  } catch (err) {
+  if (!skipMediaSetup) {
     try {
-      localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch (err2) {
-      console.warn("Camera/Mic hardware not accessible, using fallback video stream.");
-      localStream = createSyntheticStream();
+      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    } catch (err) {
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (err2) {
+        console.warn("Camera/Mic hardware not accessible, using fallback video stream.");
+        localStream = createSyntheticStream();
+      }
     }
   }
 
   openCallOverlay();
   addVideoTile(localStream, user.name || user.email || "You", true);
+
+  const nameDisplay = document.getElementById("call-name-display");
+  if (nameDisplay) nameDisplay.textContent = currentTeam.name;
 
   if (socket) {
     socket.emit("joinCall", { teamId: currentTeam.id });
@@ -1019,8 +1118,7 @@ async function startCall(announce = true) {
     });
   }
   activeCallTeamId = currentTeam.id;
-
-  document.getElementById("call-title").textContent = `📹 ${currentTeam.name}`;
+  document.getElementById("call-title").textContent = currentTeam.name;
 }
 
 function handleIncomingCall(data) {

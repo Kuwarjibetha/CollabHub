@@ -1,22 +1,23 @@
 /* ==========================================
    CollabHub — Dashboard Styles
+   Google Meet Style — Dark Minimal Layout
    ========================================== */
 
-.dashboard-body { overflow: hidden; height: 100vh; }
+.dashboard-body { overflow: hidden; height: 100vh; background: var(--clr-bg); }
 
 /* ==========================================
-   Layout Shell
+   Layout Shell — Google Meet 3-Column Grid
    ========================================== */
 .app-shell {
   display: grid;
-  grid-template-columns: 68px 260px 1fr 280px;
+  grid-template-columns: 72px 280px 1fr 300px;
   grid-template-rows: 100vh;
   height: 100vh;
   overflow: hidden;
 }
 
 /* ==========================================
-   Nav Rail (Far Left)
+   Nav Rail (Far Left) — Google Meet Style
    ========================================== */
 .nav-rail {
   background: var(--clr-surface);
@@ -24,52 +25,48 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 16px 0;
+  padding: 14px 0;
   gap: 4px;
   z-index: 10;
 }
 .nav-rail .logo {
-  width: 40px; height: 40px;
-  background: var(--gradient-primary);
-  border-radius: 12px;
+  width: 44px; height: 44px;
+  background: var(--clr-primary);
+  border-radius: 14px;
   display: flex; align-items: center; justify-content: center;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow-glow);
+  margin-bottom: 18px;
   flex-shrink: 0;
+  box-shadow: 0 2px 12px rgba(26,115,232,0.35);
 }
-.nav-rail .logo svg { width: 22px; height: 22px; }
+.nav-rail .logo svg { width: 24px; height: 24px; }
 
 .nav-item {
-  width: 44px; height: 44px;
-  border-radius: 12px;
+  width: 46px; height: 46px;
+  border-radius: 14px;
   display: flex; align-items: center; justify-content: center;
-  color: var(--clr-text-dim);
+  color: var(--clr-text-muted);
   transition: var(--transition);
   position: relative;
   cursor: pointer;
 }
-.nav-item:hover { background: var(--clr-surface-2); color: var(--clr-text-muted); }
+.nav-item:hover { background: var(--clr-surface-2); color: var(--clr-text); }
 .nav-item.active {
-  background: rgba(255, 46, 99, 0.18);
+  background: rgba(26, 115, 232, 0.18);
   color: var(--clr-primary-light);
-  box-shadow: 0 0 16px rgba(255, 46, 99, 0.25);
 }
 .nav-item .badge {
   position: absolute;
-  top: 6px; right: 6px;
+  top: 7px; right: 7px;
   width: 8px; height: 8px;
   background: var(--clr-danger);
   border-radius: 50%;
   border: 1.5px solid var(--clr-surface);
 }
 .nav-spacer { flex: 1; }
-.nav-avatar {
-  margin-top: 8px;
-  cursor: pointer;
-}
+.nav-avatar { margin-top: 8px; cursor: pointer; }
 
 /* ==========================================
-   Sidebar (Teams Panel)
+   Sidebar — Google Meet Left Panel Style
    ========================================== */
 .sidebar {
   background: var(--clr-surface);
@@ -86,10 +83,10 @@
   justify-content: space-between;
 }
 .sidebar-header h2 {
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: 0.78rem;
+  font-weight: 600;
   color: var(--clr-text-muted);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 .sidebar-actions { display: flex; gap: 4px; }
@@ -102,15 +99,18 @@
 .search-wrapper input {
   width: 100%;
   padding: 8px 12px 8px 34px;
-  background: var(--clr-surface-3);
-  border: 1px solid var(--clr-border);
-  border-radius: var(--radius-sm);
+  background: var(--clr-surface-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
   color: var(--clr-text);
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   outline: none;
   transition: var(--transition);
 }
-.search-wrapper input:focus { border-color: var(--clr-primary); }
+.search-wrapper input:focus {
+  border-color: var(--clr-primary-light);
+  background: var(--clr-surface);
+}
 .search-wrapper svg {
   position: absolute;
   left: 10px; top: 50%;
@@ -133,38 +133,38 @@
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition: var(--transition);
   position: relative;
 }
 .team-item:hover { background: var(--clr-surface-2); }
 .team-item.active {
-  background: rgba(255, 46, 99, 0.12);
-  border: 1px solid rgba(255, 46, 99, 0.3);
+  background: rgba(26, 115, 232, 0.15);
+  border: 1px solid rgba(26, 115, 232, 0.25);
 }
 .team-item.active .team-name { color: var(--clr-primary-light); }
 .team-icon {
-  width: 38px; height: 38px;
-  border-radius: 10px;
+  width: 40px; height: 40px;
+  border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
   font-size: 0.8rem;
   font-weight: 700;
   color: white;
   flex-shrink: 0;
-  background: var(--gradient-primary);
+  background: var(--clr-primary);
 }
 .team-info { flex: 1; min-width: 0; }
 .team-name {
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--clr-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .team-code {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: var(--clr-text-dim);
   font-family: monospace;
 }
@@ -184,15 +184,15 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 32px 16px;
+  padding: 40px 16px;
   text-align: center;
   color: var(--clr-text-dim);
 }
-.sidebar-empty svg { opacity: 0.4; }
-.sidebar-empty p { font-size: 0.85rem; line-height: 1.5; }
+.sidebar-empty svg { opacity: 0.3; }
+.sidebar-empty p { font-size: 0.84rem; line-height: 1.5; }
 
 /* ==========================================
-   Main Chat Panel
+   Main Chat Panel — Google Meet Chat Style
    ========================================== */
 .chat-panel {
   display: flex;
@@ -202,7 +202,6 @@
   border-right: 1px solid var(--clr-border);
 }
 
-/* Chat Header */
 .chat-header {
   padding: 14px 20px;
   border-bottom: 1px solid var(--clr-border);
@@ -214,16 +213,15 @@
 }
 .chat-header-info { flex: 1; min-width: 0; }
 .chat-header-name {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 0.95rem;
+  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.chat-header-meta { font-size: 0.78rem; color: var(--clr-text-muted); }
+.chat-header-meta { font-size: 0.76rem; color: var(--clr-text-muted); }
 .chat-header-actions { display: flex; gap: 4px; }
 
-/* Messages Area */
 .messages-area {
   flex: 1;
   overflow-y: auto;
@@ -249,27 +247,26 @@
   background: var(--clr-border);
 }
 
-/* Message Item */
 .msg {
   display: flex;
   gap: 10px;
-  padding: 4px 0;
+  padding: 4px 8px;
   border-radius: var(--radius-sm);
   transition: background 0.15s;
   position: relative;
 }
-.msg:hover { background: rgba(255,255,255,0.02); }
+.msg:hover { background: rgba(255,255,255,0.03); }
 .msg.own { flex-direction: row-reverse; }
 
 .msg-avatar { flex-shrink: 0; margin-top: 2px; }
-.msg-content { max-width: 70%; display: flex; flex-direction: column; gap: 3px; position: relative; }
+.msg-content { max-width: 72%; display: flex; flex-direction: column; gap: 3px; position: relative; }
 .msg.own .msg-content { align-items: flex-end; }
 
 .msg-meta {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  font-size: 0.75rem;
+  font-size: 0.73rem;
 }
 .msg-author { font-weight: 600; color: var(--clr-primary-light); }
 .msg-time { color: var(--clr-text-dim); }
@@ -277,7 +274,7 @@
 .msg-bubble {
   padding: 9px 13px;
   border-radius: 14px;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   line-height: 1.5;
   color: var(--clr-text);
   background: var(--clr-surface-2);
@@ -285,9 +282,9 @@
   word-break: break-word;
 }
 .msg.own .msg-bubble {
-  background: linear-gradient(135deg, rgba(255, 46, 99, 0.2), rgba(225, 29, 72, 0.12));
-  border-color: rgba(255, 46, 99, 0.35);
-  color: #ffffff;
+  background: rgba(26, 115, 232, 0.2);
+  border-color: rgba(26, 115, 232, 0.35);
+  color: #e8f0fe;
 }
 
 .msg-file {
@@ -303,50 +300,42 @@
   color: var(--clr-text);
   transition: var(--transition);
 }
-.msg-file:hover { border-color: var(--clr-border-hover); }
+.msg-file:hover { border-color: var(--clr-primary-light); background: var(--clr-surface); }
 .msg-file-icon { color: var(--clr-primary-light); }
-.msg-file-name { font-size: 0.85rem; font-weight: 500; }
+.msg-file-name { font-size: 0.84rem; font-weight: 500; }
 .msg-file-size { font-size: 0.72rem; color: var(--clr-text-dim); }
 
-/* Message Actions (hover) */
 .msg-actions {
   position: relative;
-  top: 0;
-  right: auto; left: auto;
   background: var(--clr-surface-2);
   border: 1px solid var(--clr-border);
   border-radius: 20px;
   display: none;
   gap: 4px;
   padding: 2px 6px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  box-shadow: var(--shadow-md);
   z-index: 20;
 }
 .msg:hover .msg-actions,
-.msg-actions.show-actions {
-  display: flex !important;
-  z-index: 50;
-}
+.msg-actions.show-actions { display: flex !important; z-index: 50; }
 .msg.own .msg-actions { left: auto; right: auto; }
 
-/* Chat Welcome */
 .chat-welcome {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 14px;
   color: var(--clr-text-dim);
   text-align: center;
   padding: 40px;
 }
-.chat-welcome h3 { font-size: 1.1rem; font-weight: 600; color: var(--clr-text-muted); }
-.chat-welcome p { font-size: 0.875rem; max-width: 280px; line-height: 1.6; }
+.chat-welcome h3 { font-size: 1rem; font-weight: 500; color: var(--clr-text-muted); }
+.chat-welcome p { font-size: 0.84rem; max-width: 280px; line-height: 1.6; }
 
-/* Chat Input */
 .chat-input-area {
-  padding: 14px 20px;
+  padding: 12px 16px;
   border-top: 1px solid var(--clr-border);
   background: var(--clr-surface);
   flex-shrink: 0;
@@ -355,15 +344,15 @@
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  background: var(--clr-surface-3);
+  background: var(--clr-surface-2);
   border: 1px solid var(--clr-border);
-  border-radius: 14px;
-  padding: 8px 10px;
+  border-radius: 24px;
+  padding: 8px 10px 8px 16px;
   transition: var(--transition);
 }
 .chat-input-wrapper:focus-within {
-  border-color: var(--clr-primary);
-  box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
+  border-color: var(--clr-primary-light);
+  box-shadow: 0 0 0 2px rgba(26,115,232,0.15);
 }
 #chat-input {
   flex: 1;
@@ -371,7 +360,7 @@
   border: none;
   outline: none;
   color: var(--clr-text);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   resize: none;
   max-height: 120px;
   line-height: 1.5;
@@ -381,20 +370,20 @@
 .chat-input-actions { display: flex; align-items: center; gap: 2px; }
 #btn-send {
   width: 36px; height: 36px;
-  border-radius: 10px;
-  background: var(--gradient-primary);
+  border-radius: 50%;
+  background: var(--clr-primary);
   color: white;
   display: flex; align-items: center; justify-content: center;
   transition: var(--transition);
-  box-shadow: 0 2px 10px rgba(124,58,237,0.4);
+  box-shadow: 0 2px 8px rgba(26,115,232,0.3);
+  flex-shrink: 0;
 }
-#btn-send:hover { box-shadow: 0 4px 16px rgba(124,58,237,0.6); transform: translateY(-1px); }
+#btn-send:hover { background: var(--clr-primary-dark); transform: scale(1.05); }
 #btn-send:disabled { opacity: 0.5; transform: none; cursor: not-allowed; }
 
-/* Typing indicator */
 .typing-indicator {
   padding: 4px 0 0 50px;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: var(--clr-text-dim);
   min-height: 20px;
   display: flex;
@@ -413,75 +402,77 @@
 @keyframes typingDot { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
 
 /* ==========================================
-   Right Panel (Members + Call)
+   Right Panel — Members + Info
    ========================================== */
 .right-panel {
   background: var(--clr-surface);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  border-left: 1px solid var(--clr-border);
 }
 .right-panel-header {
   padding: 18px 16px 14px;
   border-bottom: 1px solid var(--clr-border);
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.78rem;
+  font-weight: 600;
   color: var(--clr-text-muted);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-/* Call Button */
 .start-call-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
-  margin: 12px 14px;
-  padding: 12px 16px;
-  background: var(--gradient-primary);
-  border-radius: var(--radius-md);
+  margin: 14px 12px 10px;
+  padding: 13px 20px;
+  background: var(--clr-primary);
+  border-radius: var(--radius-full);
   color: white;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   transition: var(--transition);
-  box-shadow: 0 4px 20px rgba(124,58,237,0.35);
+  box-shadow: 0 2px 10px rgba(26,115,232,0.3);
+  border: none;
 }
 .start-call-btn:hover {
-  box-shadow: 0 6px 28px rgba(124,58,237,0.55);
+  background: var(--clr-primary-dark);
+  box-shadow: 0 4px 16px rgba(26,115,232,0.45);
   transform: translateY(-1px);
 }
 
-/* Members list */
-.members-section { padding: 8px 14px; }
+.members-section { padding: 8px 12px; }
 .members-section-title {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: var(--clr-text-dim);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  padding: 6px 0;
+  padding: 8px 4px 4px;
 }
 .member-item {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 7px 8px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   transition: var(--transition);
 }
 .member-item:hover { background: var(--clr-surface-2); }
 .member-info { flex: 1; min-width: 0; }
-.member-name { font-size: 0.875rem; font-weight: 500; }
-.member-role { font-size: 0.72rem; color: var(--clr-text-dim); }
+.member-name { font-size: 0.84rem; font-weight: 500; }
+.member-role { font-size: 0.7rem; color: var(--clr-text-dim); }
 .online-dot {
   width: 8px; height: 8px;
   border-radius: 50%;
   background: var(--clr-success);
-  box-shadow: 0 0 8px rgba(16,185,129,0.6);
+  box-shadow: 0 0 6px rgba(52,168,83,0.5);
   flex-shrink: 0;
 }
 .offline-dot {
@@ -490,9 +481,7 @@
   background: var(--clr-text-dim);
   flex-shrink: 0;
 }
-.member-status-wrapper {
-  position: relative;
-}
+.member-status-wrapper { position: relative; }
 .member-status-wrapper .online-dot {
   position: absolute;
   bottom: 0; right: 0;
@@ -500,25 +489,26 @@
 }
 
 /* ==========================================
-   Video Call Overlay
+   VIDEO CALL OVERLAY — GOOGLE MEET EXACT STYLE
    ========================================== */
 .call-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(5, 5, 12, 0.95);
-  backdrop-filter: blur(10px);
+  background: #202124;
   z-index: 500;
   display: flex;
   flex-direction: column;
 }
 .call-overlay.hidden { display: none; }
 
+/* Call Header Bar */
 .call-header {
-  padding: 16px 24px;
+  padding: 12px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--clr-border);
+  background: #202124;
+  flex-shrink: 0;
 }
 .call-header-actions {
   display: flex;
@@ -537,177 +527,339 @@
   flex-direction: column;
   min-width: 0;
   overflow: hidden;
+  position: relative;
 }
-.call-title { font-size: 1rem; font-weight: 700; }
-.call-timer { font-size: 0.875rem; color: var(--clr-text-muted); font-variant-numeric: tabular-nums; }
+.call-title { font-size: 0.95rem; font-weight: 500; color: var(--clr-text); }
+.call-timer {
+  font-size: 0.84rem;
+  color: var(--clr-text-muted);
+  font-variant-numeric: tabular-nums;
+  background: rgba(255,255,255,0.08);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+}
 
+/* Participant Grid — Auto-resize like Google Meet */
 .call-videos {
   flex: 1;
   display: grid;
-  gap: 10px;
-  padding: 16px;
-  align-content: start;
-  overflow-y: auto;
+  gap: 8px;
+  padding: 12px;
+  overflow: hidden;
+  align-content: center;
+  justify-content: center;
 }
 .call-videos.hidden { display: none; }
-.call-videos.one { grid-template-columns: 1fr; }
-.call-videos.two { grid-template-columns: 1fr 1fr; }
-.call-videos.three { grid-template-columns: 1fr 1fr 1fr; }
-.call-videos.four { grid-template-columns: 1fr 1fr; }
+.call-videos.one { grid-template-columns: minmax(0, 900px); }
+.call-videos.two { grid-template-columns: repeat(2, minmax(0, 580px)); }
+.call-videos.three { grid-template-columns: repeat(3, minmax(0, 420px)); }
+.call-videos.four { grid-template-columns: repeat(2, minmax(0, 580px)); }
+.call-videos.five,
+.call-videos.six { grid-template-columns: repeat(3, minmax(0, 380px)); }
 
+/* Video Tile — Google Meet participant tile */
 .video-tile {
   position: relative;
-  border-radius: var(--radius-lg);
+  border-radius: 14px;
   overflow: hidden;
-  background: var(--clr-surface-2);
-  border: 1px solid var(--clr-border);
+  background: #3c4043;
   aspect-ratio: 16/9;
   cursor: pointer;
-  transition: border-color 0.2s, transform 0.15s;
+  transition: box-shadow 0.2s;
 }
-.video-tile:hover { border-color: rgba(124,58,237,0.6); transform: scale(1.01); }
+.video-tile:hover { box-shadow: 0 0 0 2px rgba(138,180,248,0.5); }
 .video-tile.local { cursor: default; }
-.video-tile.local:hover { transform: none; }
+.video-tile.local:hover { box-shadow: none; }
+.video-tile.speaking { box-shadow: 0 0 0 3px var(--clr-success) !important; }
+.video-tile video { width: 100%; height: 100%; object-fit: cover; }
+.video-tile.local { box-shadow: 0 0 0 1px rgba(138,180,248,0.3); }
+
 .video-tile-pin-hint {
   position: absolute;
   top: 10px; left: 10px;
-  background: rgba(0,0,0,0.55);
+  background: rgba(0,0,0,0.7);
   padding: 3px 8px;
   border-radius: 12px;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   opacity: 0;
   transition: opacity 0.2s;
 }
 .video-tile:not(.local):hover .video-tile-pin-hint { opacity: 1; }
-.video-tile video { width: 100%; height: 100%; object-fit: cover; }
-.video-tile.local { border-color: rgba(124,58,237,0.5); }
+
 .video-tile-label {
   position: absolute;
   bottom: 10px; left: 10px;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(8px);
+  background: rgba(0,0,0,0.65);
   padding: 4px 10px;
   border-radius: 20px;
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: 0.76rem;
+  font-weight: 500;
   display: flex; align-items: center; gap: 5px;
+  color: white;
 }
-.video-tile-muted { position: absolute; top: 10px; right: 10px; }
+.video-tile-muted {
+  position: absolute;
+  top: 10px; right: 10px;
+  background: rgba(234,67,53,0.9);
+  border-radius: 50%;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+}
 .video-no-video {
   position: absolute; inset: 0;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   gap: 10px;
   color: var(--clr-text-muted);
-  font-size: 0.875rem;
+  font-size: 0.84rem;
+  background: #3c4043;
+}
+.video-no-video .big-avatar {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: var(--clr-primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem;
+  font-weight: 600;
+  color: white;
 }
 
+/* Google Meet Bottom Controls Bar */
 .call-controls {
-  padding: 20px;
-  border-top: 1px solid var(--clr-border);
+  padding: 16px 24px 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 12px;
+  background: #202124;
+  flex-shrink: 0;
+  position: relative;
 }
+.call-controls-left {
+  position: absolute;
+  left: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.call-controls-right {
+  position: absolute;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Google Meet style control buttons */
 .call-ctrl-btn {
-  width: 52px; height: 52px;
+  width: 56px; height: 56px;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 0;
   transition: var(--transition);
-  background: var(--clr-surface-3);
+  background: #3c4043;
   color: var(--clr-text);
-  border: 1px solid var(--clr-border);
+  border: none;
+  position: relative;
 }
-.call-ctrl-btn:hover { transform: scale(1.08); }
-.call-ctrl-btn.active { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); color: var(--clr-danger); }
-.call-ctrl-btn.end-call {
-  width: 60px; height: 60px;
-  background: var(--clr-danger);
-  border-color: var(--clr-danger);
+.call-ctrl-btn:hover { background: #4a4d51; transform: scale(1.05); }
+.call-ctrl-btn.active {
+  background: #ea4335;
   color: white;
-  box-shadow: 0 4px 20px rgba(239,68,68,0.5);
 }
-.call-ctrl-btn.end-call:hover { box-shadow: 0 6px 28px rgba(239,68,68,0.7); }
+.call-ctrl-btn.active:hover { background: #c5221f; }
+.call-ctrl-btn.end-call {
+  width: 56px; height: 56px;
+  background: #ea4335;
+  color: white;
+  border-radius: var(--radius-full);
+  padding: 0 20px;
+  width: auto;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.call-ctrl-btn.end-call:hover { background: #c5221f; }
+.call-ctrl-btn .ctrl-label {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  color: var(--clr-text-muted);
+  white-space: nowrap;
+  pointer-events: none;
+}
 
-/* Spotlight / fullscreen pin view */
+/* Spotlight / Pinned View */
 .call-spotlight {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 16px;
-  gap: 12px;
+  padding: 12px;
+  gap: 10px;
   min-height: 0;
 }
 .call-spotlight.hidden { display: none; }
 .spotlight-main {
   flex: 1;
   min-height: 0;
-  border-radius: var(--radius-lg);
+  border-radius: 14px;
   overflow: hidden;
-  background: var(--clr-surface-2);
-  border: 2px solid rgba(124,58,237,0.5);
+  background: #3c4043;
   position: relative;
 }
 .spotlight-main video {
-  width: 100%;
-  height: 100%;
+  width: 100%; height: 100%;
   object-fit: contain;
   background: #000;
 }
 .spotlight-strip {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   overflow-x: auto;
   padding-bottom: 4px;
+  flex-shrink: 0;
+  height: 110px;
 }
 .spotlight-thumb {
-  width: 140px;
+  width: 160px;
   flex-shrink: 0;
   aspect-ratio: 16/9;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   overflow: hidden;
-  border: 1px solid var(--clr-border);
+  border: 2px solid transparent;
   cursor: pointer;
   position: relative;
   transition: border-color 0.2s;
+  background: #3c4043;
 }
-.spotlight-thumb:hover { border-color: var(--clr-primary); }
+.spotlight-thumb:hover { border-color: rgba(138,180,248,0.5); }
+.spotlight-thumb.active { border-color: var(--clr-success); }
 .spotlight-thumb video { width: 100%; height: 100%; object-fit: cover; }
 
-/* In-call chat panel */
+/* Google Meet Lobby Screen */
+.call-lobby {
+  position: fixed;
+  inset: 0;
+  background: #202124;
+  z-index: 501;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+.call-lobby.hidden { display: none; }
+.lobby-video-preview {
+  width: 100%;
+  max-width: 520px;
+  aspect-ratio: 16/9;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #3c4043;
+  position: relative;
+}
+.lobby-video-preview video {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+.lobby-no-cam {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 12px;
+  color: var(--clr-text-muted);
+}
+.lobby-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.lobby-info {
+  text-align: center;
+}
+.lobby-info h2 { font-size: 1.3rem; font-weight: 500; margin-bottom: 4px; }
+.lobby-info p { font-size: 0.875rem; color: var(--clr-text-muted); }
+.lobby-join-btn {
+  padding: 14px 32px;
+  background: var(--clr-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 2px 10px rgba(26,115,232,0.3);
+}
+.lobby-join-btn:hover { background: var(--clr-primary-dark); box-shadow: 0 4px 16px rgba(26,115,232,0.4); }
+.lobby-ctrl-btn {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: #3c4043;
+  color: var(--clr-text);
+  border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.lobby-ctrl-btn:hover { background: #4a4d51; }
+.lobby-ctrl-btn.muted { background: var(--clr-danger); color: white; }
+
+/* Google Meet In-call Right Panel (Chat / Participants) */
 .call-chat-panel {
-  width: 320px;
+  width: 340px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  border-left: 1px solid var(--clr-border);
-  background: var(--clr-surface);
+  background: #2d2f31;
+  border-left: 1px solid rgba(255,255,255,0.08);
+  transition: width 0.3s ease;
 }
 .call-chat-panel.hidden { display: none; }
 .call-chat-header {
-  padding: 12px 16px;
+  padding: 16px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--clr-border);
-  font-weight: 700;
-  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-weight: 600;
+  font-size: 1rem;
+}
+.call-chat-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.call-chat-tab {
+  flex: 1;
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--clr-text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: var(--transition);
+}
+.call-chat-tab.active {
+  color: var(--clr-primary-light);
+  border-bottom-color: var(--clr-primary-light);
 }
 .call-messages-area {
   flex: 1;
   overflow-y: auto;
-  padding: 12px;
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-.call-messages-area .msg { font-size: 0.85rem; }
-.call-messages-area .msg-bubble { padding: 8px 12px; font-size: 0.85rem; }
+.call-messages-area .msg { font-size: 0.84rem; }
+.call-messages-area .msg-bubble { padding: 8px 12px; font-size: 0.84rem; }
 .call-chat-input-area {
-  padding: 12px;
-  border-top: 1px solid var(--clr-border);
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255,255,255,0.08);
   display: flex;
   gap: 8px;
   align-items: flex-end;
@@ -715,99 +867,160 @@
 .call-chat-input-area textarea {
   flex: 1;
   resize: none;
-  padding: 8px 12px;
+  padding: 10px 14px;
   background: var(--clr-surface-2);
-  border: 1px solid var(--clr-border);
-  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 24px;
   color: var(--clr-text);
   font-family: inherit;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   max-height: 80px;
+  outline: none;
+}
+.call-chat-input-area textarea:focus {
+  border-color: var(--clr-primary-light);
+}
+
+/* Participants panel in call */
+.call-participants-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.call-participant-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+}
+.call-participant-item:hover { background: var(--clr-surface-2); }
+.call-participant-icons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
 }
 
 /* Incoming call popup */
 .incoming-call {
   position: fixed;
   bottom: 24px; right: 24px;
-  background: var(--clr-surface-2);
+  background: var(--clr-surface);
   border: 1px solid var(--clr-border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  width: 300px;
-  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-xl);
+  padding: 20px 24px;
+  width: 320px;
+  box-shadow: var(--shadow-lg);
   z-index: 600;
   animation: slideInRight 0.3s ease;
 }
 .incoming-call.hidden { display: none; }
 @keyframes slideInRight {
-  from { opacity: 0; transform: translateX(100%); }
-  to { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 .incoming-call-info { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-.incoming-call-text h4 { font-weight: 700; font-size: 0.95rem; }
+.incoming-call-text h4 { font-weight: 600; font-size: 0.95rem; }
 .incoming-call-text p { font-size: 0.8rem; color: var(--clr-text-muted); }
 .call-ring-icon {
-  width: 44px; height: 44px;
-  background: var(--gradient-primary);
+  width: 48px; height: 48px;
+  background: var(--clr-primary);
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  animation: ringPulse 1s ease infinite;
+  animation: ringPulse 1.2s ease infinite;
+  flex-shrink: 0;
 }
 @keyframes ringPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(124,58,237,0.5); }
-  50% { box-shadow: 0 0 0 12px rgba(124,58,237,0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(26,115,232,0.5); }
+  50% { box-shadow: 0 0 0 14px rgba(26,115,232,0); }
 }
-.incoming-call-actions { display: flex; gap: 8px; }
-.incoming-call-actions button { flex: 1; padding: 9px; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.875rem; }
+.incoming-call-actions { display: flex; gap: 10px; }
+.incoming-call-actions button {
+  flex: 1;
+  padding: 10px;
+  border-radius: var(--radius-full);
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+.btn-accept { background: var(--clr-success); color: white; border: none; }
+.btn-accept:hover { background: #2d9248; }
+.btn-decline { background: var(--clr-danger); color: white; border: none; }
+.btn-decline:hover { background: #c5221f; }
+
+/* Screen sharing indicator */
+.screen-share-badge {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(52,168,83,0.9);
+  color: white;
+  padding: 6px 16px;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: fadeIn 0.3s ease;
+}
 
 /* ==========================================
-   Notification Toast
+   Notification Toast — Google Material Style
    ========================================== */
 .toast-container {
   position: fixed;
-  top: 20px; right: 20px;
+  bottom: 24px; left: 50%;
+  transform: translateX(-50%);
   z-index: 9999;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 8px;
+  pointer-events: none;
 }
 .toast {
-  background: var(--clr-surface-2);
-  border: 1px solid var(--clr-border);
-  border-radius: var(--radius-md);
-  padding: 12px 16px;
-  min-width: 280px;
-  max-width: 360px;
+  background: #3c4043;
+  border-radius: var(--radius-full);
+  padding: 12px 20px;
+  min-width: 200px;
+  max-width: 400px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
   animation: toastIn 0.25s ease;
+  pointer-events: all;
+  color: var(--clr-text);
 }
 @keyframes toastIn {
-  from { opacity: 0; transform: translateX(50px); }
-  to { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 .toast.removing { animation: toastOut 0.2s ease forwards; }
-@keyframes toastOut { to { opacity: 0; transform: translateX(50px); } }
-.toast-icon { flex-shrink: 0; margin-top: 1px; }
+@keyframes toastOut { to { opacity: 0; transform: translateY(8px) scale(0.96); } }
+.toast-icon { flex-shrink: 0; }
 .toast-text { flex: 1; }
-.toast-title { font-size: 0.875rem; font-weight: 600; }
-.toast-body { font-size: 0.8rem; color: var(--clr-text-muted); margin-top: 2px; }
+.toast-title { font-size: 0.875rem; font-weight: 500; }
+.toast-body { font-size: 0.78rem; color: var(--clr-text-muted); margin-top: 1px; }
 .toast.success .toast-icon { color: var(--clr-success); }
 .toast.error .toast-icon { color: var(--clr-danger); }
-.toast.info .toast-icon { color: var(--clr-accent); }
+.toast.info .toast-icon { color: var(--clr-primary-light); }
 
 /* ==========================================
-   Modals (Create / Join Team)
+   Modals
    ========================================== */
 .invite-code {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 12px;
-  background: var(--clr-surface-3);
-  border: 1px dashed var(--clr-border-hover);
+  background: var(--clr-surface-2);
+  border: 1px dashed rgba(138,180,248,0.4);
   border-radius: var(--radius-sm);
 }
 .invite-code span {
@@ -820,32 +1033,37 @@
 }
 
 /* ==========================================
-   Loading State
+   Loading Screen — Google Meet style
    ========================================== */
 .loading-screen {
   position: fixed;
   inset: 0;
-  background: var(--clr-bg);
+  background: #202124;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 20px;
   z-index: 999;
 }
 .loading-screen.hidden { display: none; pointer-events: none; }
 .loading-screen { pointer-events: all; }
 .loading-logo {
-  width: 64px; height: 64px;
-  background: var(--gradient-primary);
-  border-radius: 20px;
+  width: 72px; height: 72px;
+  background: var(--clr-primary);
+  border-radius: 22px;
   display: flex; align-items: center; justify-content: center;
   animation: logoPulse 2s ease infinite;
+  box-shadow: 0 0 40px rgba(26,115,232,0.4);
+}
+@keyframes logoPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(26,115,232,0.3); }
+  50% { transform: scale(1.06); box-shadow: 0 0 40px rgba(26,115,232,0.5); }
 }
 .loading-bar {
-  width: 180px;
+  width: 200px;
   height: 3px;
-  background: var(--clr-surface-3);
+  background: var(--clr-surface-2);
   border-radius: 99px;
   overflow: hidden;
 }
@@ -853,7 +1071,7 @@
   content: '';
   display: block;
   height: 100%;
-  background: var(--gradient-primary);
+  background: var(--clr-primary);
   border-radius: 99px;
   animation: loadingBar 1.5s ease infinite;
 }
@@ -862,13 +1080,14 @@
   50% { width: 60%; margin-left: 20%; }
   100% { width: 0%; margin-left: 100%; }
 }
+.loading-screen p { color: var(--clr-text-muted); font-size: 0.875rem; }
 
 /* ==========================================
    Edit message input
    ========================================== */
 .msg-edit-input {
-  background: var(--clr-surface-3);
-  border: 1px solid var(--clr-primary);
+  background: var(--clr-surface-2);
+  border: 1px solid var(--clr-primary-light);
   border-radius: var(--radius-sm);
   padding: 6px 10px;
   color: var(--clr-text);
@@ -880,25 +1099,19 @@
 /* ==========================================
    RESPONSIVE MEDIA QUERIES
    ========================================== */
-
-/* Laptops & Small Desktops (< 1200px) */
 @media (max-width: 1200px) {
   .app-shell {
-    grid-template-columns: 60px 240px 1fr 240px;
+    grid-template-columns: 64px 260px 1fr 280px;
   }
 }
 
-/* Tablets & Small Laptops (< 1024px) */
 @media (max-width: 1024px) {
   .app-shell {
-    grid-template-columns: 60px 240px 1fr;
+    grid-template-columns: 64px 260px 1fr;
   }
-  .right-panel {
-    display: none;
-  }
+  .right-panel { display: none; }
 }
 
-/* Mobile & Small Tablets (< 768px) */
 @media (max-width: 768px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -913,13 +1126,9 @@
     border-right: none;
     border-bottom: 1px solid var(--clr-border);
   }
-  .nav-rail .logo {
-    margin-bottom: 0;
-  }
+  .nav-rail .logo { margin-bottom: 0; }
   .nav-spacer { display: none; }
-  .sidebar {
-    display: none;
-  }
+  .sidebar { display: none; }
   .sidebar.mobile-open {
     display: flex;
     position: fixed;
@@ -927,30 +1136,15 @@
     z-index: 90;
     box-shadow: 10px 0 40px rgba(0,0,0,0.6);
   }
-  .chat-header-actions {
-    gap: 2px;
-  }
-  .chat-search-bar input {
-    width: 110px !important;
-  }
-  .call-overlay {
-    padding: 16px;
-  }
-  .call-videos {
-    grid-template-columns: 1fr;
-  }
+  .call-overlay { padding: 0; }
+  .call-videos { grid-template-columns: 1fr; }
+  .call-chat-panel { width: 100%; }
+  .call-controls { padding: 12px 16px 18px; gap: 8px; }
+  .call-ctrl-btn { width: 48px; height: 48px; }
 }
 
-/* Small Mobile (< 480px) */
 @media (max-width: 480px) {
-  .chat-input-area {
-    padding: 10px;
-  }
-  .msg-bubble {
-    max-width: 85%;
-  }
-  .modal {
-    width: 94%;
-    padding: 16px;
-  }
+  .chat-input-area { padding: 8px; }
+  .msg-bubble { max-width: 88%; }
+  .modal { width: 94%; padding: 16px; }
 }
