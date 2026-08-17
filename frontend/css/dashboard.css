@@ -833,7 +833,8 @@
   gap: 16px;
   z-index: 999;
 }
-.loading-screen.hidden { display: none; }
+.loading-screen.hidden { display: none; pointer-events: none; }
+.loading-screen { pointer-events: all; }
 .loading-logo {
   width: 64px; height: 64px;
   background: var(--gradient-primary);
