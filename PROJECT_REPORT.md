@@ -1,264 +1,217 @@
-# CollabHub — Comprehensive Project Report & Documentation
+CollabHub - Project Report
 
-## 1. Executive Summary
-**CollabHub** is a production-grade, real-time team collaboration and communication web platform designed to streamline remote teamwork, high-fidelity messaging, and WebRTC-powered video/audio conferencing. It unifies team channels, direct 1-on-1 messaging, file/media sharing, instant notifications, team management, and multi-user video meetings into a single, high-performance web application.
+1. Project Overview
+CollabHub is a real-time team collaboration, group messaging, and WebRTC video conferencing web application that I developed to make remote teamwork, communication, and meetings seamless and organized in one single platform. In this system, team members can create or join teams, chat in real-time channels, send 1-on-1 direct messages, share files and media, preview their camera and microphone in a pre-meeting lobby, start instant HD video meetings, and rejoin ongoing calls if disconnected without needing third-party meeting links. There are two primary types of users in the system: Team Members (Users) who collaborate within teams, chat, and participate in video calls, and the Super Admin who manages platform users, teams, chat moderation, broadcast announcements, and background jobs. I built this project using Node.js, Express, Socket.io, WebRTC, and Supabase PostgreSQL with Sequelize ORM for the backend, with clean modular HTML5, CSS3, and JavaScript on the frontend, all deployed on Render.
 
-The platform provides a distinct, secure separation of roles:
-- **Team Member / User**: Can join or create teams, participate in channels & direct chats, send file attachments, react to messages, preview their camera/mic in a pre-meeting lobby, start or rejoin active video meetings, and manage their profile.
-- **Super Admin**: Has access to a dedicated Admin Control Console for real-time platform analytics, user moderation (block, unblock, delete), team management, live chat moderation, system rate limits, broadcast notifications, and background job queue management.
+2. Problem Statement
+In most remote teams, communication is heavily fragmented across multiple different applications — using tools like Slack for messaging, Google Meet or Zoom for video calls, and separate cloud drives for file sharing. Switching between multiple apps creates context switching, causes team members to miss live meetings because there is no instant notification or live meeting indicator, and makes it hard to rejoin when an internet connection drops. Additionally, many collaboration tools lack proper administrative moderation controls for managing users, monitoring channels, and broadcasting announcements. I built CollabHub to solve exactly these problems: to give teams a unified, fast, and interactive workspace for chat, file sharing, and Google Meet-style video conferencing, while giving administrators a dedicated control console to manage the entire platform.
 
----
+3. My Approach & How I Solved It
+To solve these challenges, I built an integrated real-time micro-architecture where REST APIs, WebSockets, and WebRTC peer connections work together seamlessly. I used Node.js and Express for the backend REST API, Supabase PostgreSQL with Sequelize ORM to store all relational data, and JWT tokens for secure authentication and role-based access control. For real-time chat, live presence, typing indicators, and meeting alerts, I used Socket.io to broadcast events instantly to room members. For video conferencing, I implemented WebRTC with Socket.io signaling, allowing peer-to-peer video streaming, screen sharing, and a pre-meeting lobby where users test camera/mic before joining. To prevent missed meetings, the system displays a live pulsing "Meeting Live" badge on team cards and sends instant notifications. If someone drops off a call unexpectedly, a one-click Rejoin banner allows them to instantly rejoin like Google Meet. For media sharing, I used Multer with Cloudinary so images, videos, and documents are stored securely in the cloud.
 
-## 2. Problem Statement & Solution
+4. Core Features
+• Users can register, log in, manage their profile details, and upload avatar profile pictures stored on Cloudinary.
+• Users can create teams with unique invite codes or join existing teams instantly using a 6-character code.
+• Real-time channel group chat powered by Socket.io, featuring message reactions (emojis), quote replies, and file attachments.
+• Private 1-on-1 Direct Messaging between users with live unread counters and online/offline status indicators.
+• Pre-Meeting Lobby preview allowing users to inspect camera video, test microphone audio, and toggle devices before entering calls.
+• Live "Meeting Live" status badge displayed on team cards so all members know a call is currently active.
+• Instant meeting broadcast notifications sent to all team members with a direct "Join Call" action button.
+• One-click Sudden Disconnect Rejoin mechanism allowing users to jump back into active meetings immediately if disconnected.
+• Full In-Call WebRTC Controls: mute/unmute mic, toggle video camera, screen sharing, pinned speaker tile, in-call chat, and live duration timer.
+• Dedicated Interactive Sidebar Notifications panel with category filter tabs (All, Messages, Mentions, Calls) and real-time unread badges.
+• Safe Leave Team flow with a confirmation modal and automatic fallback to remaining teams.
+• Discreet Super Admin Console accessible from the footer with strict role protection (Super Admin only).
+• Admin Management Suite: platform analytics, user blocking/unblocking/deletion, team management, real-time chat stream moderation, rate limits, broadcast announcements, and background job queue controls.
+• Clean, modular frontend architecture with decoupled HTML pages, CSS stylesheets, and JS modules with zero comments.
 
-### The Problem
-Modern distributed teams face heavy context switching and productivity loss by juggling separate applications for team chat (e.g. Slack), video conferencing (e.g. Google Meet/Zoom), and file sharing. Moreover, open-source solutions often lack:
-- Reliable instant meeting alerts and live call status indicators for teammates.
-- Pre-call lobby checks and seamless rejoining mechanisms when connections drop unexpectedly.
-- Role-based separation between everyday collaboration and super-administrative controls.
-- Clean, maintainable, modular frontend code.
+5. Technologies & Tools Used
+Area | Technology / Tool | What it does
+--- | --- | ---
+Runtime | Node.js + Express (v5) | Runs the backend server and handles all REST API requests
+Real-Time Engine | Socket.io | Manages bi-directional WebSocket connections for live chat, typing indicators, and instant meeting notifications
+Video & Audio | WebRTC (RTCPeerConnection) | Enables real-time peer-to-peer audio/video calling, screen sharing, and media streaming directly in the browser
+Database | Supabase PostgreSQL | Scalable cloud relational database for storing users, teams, messages, calls, and notifications
+ORM | Sequelize | Lets me define database models, handle migrations, and write relational queries in JavaScript
+Authentication | JWT + bcryptjs | Handles user authentication, generates secure session tokens, and hashes passwords securely
+File Upload | Multer + Cloudinary | Accepts uploaded profile pictures and chat files and stores them safely in the cloud CDN
+Config | dotenv | Keeps sensitive values like database connection strings and Cloudinary API keys out of code
+Dev Server | nodemon | Automatically restarts the Node.js backend server whenever changes are saved
+Frontend | Plain HTML5 + CSS3 + JS | Modular, fast, and responsive user interface without framework bloat or complex build steps
+Client Storage | localStorage + sessionStorage | Saves the JWT login token and user session data in the browser
+Deployment | Render | Hosts the backend API service and serves the static frontend application
 
-### The CollabHub Solution
-CollabHub resolves these challenges through:
-1. **Unified Workspace**: Chat, media sharing, and video calls in one lightweight, responsive interface without third-party meeting links.
-2. **Google Meet-Style Meetings**: Pre-meeting lobby with camera/mic toggles, live "Meeting is Live" team badges, active call broadcast notifications, and one-click instant call rejoin.
-3. **Interactive Sidebar Notifications**: Dedicated sidebar panel with multi-category filtering (`All`, `Messages`, `Mentions`, `Calls`), real-time unread badges, and direct action triggers.
-4. **Strict Role-Based Access Control (RBAC)**: Distinct User Collaboration Hub vs. Super Admin Control Console with discrete entry points and JWT authorization.
-5. **Modular, High-Performance Architecture**: Zero-framework vanilla HTML5, CSS3, and JavaScript frontend separated cleanly into dedicated stylesheets, scripts, and views, backed by Node.js, Express, Socket.io, Sequelize, and Supabase PostgreSQL.
+6. APIs & Their Purpose
+API / Service | Purpose
+--- | ---
+REST API (Express) | The primary backend API handling authentication, user profiles, team operations, historical message fetching, notifications, and admin controls. All routes are prefixed with /api/v1.
+Socket.io Events | Handles real-time messaging (send-message, receive-message), typing status, meeting live broadcasts, and WebRTC call signaling (call-user, make-answer, ice-candidate).
+JWT | Generates an encrypted token upon login. This token is verified on every API request and socket connection to identify the user and enforce role permissions.
+bcryptjs | Hashes passwords with salt rounds before saving to PostgreSQL so user credentials remain completely secure.
+Cloudinary | Cloud media storage service used to store user profile pictures and chat attachments, returning high-speed CDN URLs.
+Multer | Middleware that handles multipart form data file uploads from the frontend before transferring them to Cloudinary.
+Supabase PostgreSQL (via Sequelize) | Relational database storing users, teams, team memberships, messages, direct messages, calls, and notifications. Sequelize manages all relationships and transactions.
 
----
+7. System Architecture & Diagrams
 
-## 3. System Architecture & Tech Stack
+A. How the API Works (Request-Response Flow)
+Frontend (UI: HTML / CSS / JS)
+        |                     \
+   (HTTP REST API)       (Socket.io WebSockets)
+        |                       \
+ Express Router (/api/v1)     Socket Server
+        |                       /       \
+ Auth Middleware (JWT)      [ Chat ]   [ WebRTC Signaling ]
+        |                      \         /
+ Controller Layer            Service Layer (Business Logic)
+        \                         /
+    Supabase PostgreSQL & Cloudinary CDN
+                 \       /
+         Response Utility (JSON)
+                 \       /
+        Frontend UI Updates
 
-```
-+-------------------------------------------------------------------------+
-|                              FRONTEND LAYER                             |
-|  HTML5 Pages (/pages/user, /pages/admin, /pages/auth, index.html)       |
-|  CSS3 Modules (/css/dashboard.css, admin.css, landing.css, profile.css) |
-|  JavaScript Modules (/js/pages/user/dashboard.js, admin/dashboard.js)   |
-+------------------------------------+------------------------------------+
-                                     |
-                               HTTP REST / WebSocket Events
-                                     |
-+------------------------------------+------------------------------------+
-|                               BACKEND LAYER                             |
-|  Node.js + Express REST API (/api/v1/*)                                 |
-|  Socket.io Real-Time Engine (Chat delivery, WebRTC signaling, alerts)  |
-|  JWT & BCrypt Authentication Middleware                                |
-|  Multer + Cloudinary File Upload Processing                            |
-+------------------------------------+------------------------------------+
-                                     |
-                               Sequelize ORM (SSL)
-                                     |
-+------------------------------------+------------------------------------+
-|                              DATABASE LAYER                             |
-|  Supabase Cloud PostgreSQL (Users, Teams, Messages, Calls, DMs, Logs)   |
-+-------------------------------------------------------------------------+
-```
+B. Data Flow Diagram
+User Action -> Auth Validation (JWT) -> Controller -> Service Layer -> PostgreSQL Database
+     |                                                                         |
+(File Upload) -> Multer Middleware -> Cloudinary Cloud -> Return CDN URL ------+
+     |
+(Real-Time Event) -> Socket.io Server -> Broadcast to Team Members / Direct Recipient
 
-### Technologies & Frameworks
+C. How User Workflows Work
 
-| Layer | Technology | Purpose |
-| :--- | :--- | :--- |
-| **Frontend Structure** | HTML5 (Semantic) | Page templates and UI components |
-| **Frontend Styling** | CSS3 (Custom Design System) | Glassmorphism, animations, responsive grid/flexbox layouts |
-| **Frontend Logic** | Vanilla JavaScript (ES6+) | Modular page controllers, DOM updates, WebRTC & Socket clients |
-| **Backend Runtime** | Node.js (v20+) | High-throughput asynchronous server runtime |
-| **Web Framework** | Express (v5) | RESTful API endpoints and middleware pipeline |
-| **Real-Time Communication** | Socket.io | Bi-directional WebSocket events for chat, presence & signaling |
-| **Video & Audio** | WebRTC (RTCPeerConnection) | Low-latency peer-to-peer audio/video streaming & screen sharing |
-| **Relational Database** | Supabase PostgreSQL | Scalable cloud PostgreSQL with foreign keys and indexes |
-| **ORM / Migration** | Sequelize | Model definitions, associations, database migrations, and queries |
-| **Security & Auth** | JWT + bcryptjs | Token-based auth guard and password hashing |
-| **Media Hosting** | Cloudinary + Multer | Cloud storage and CDN delivery for user profile pictures and files |
+[ User: Start Video Meeting ]
+             |
+   Opens Pre-Meeting Lobby (Camera & Mic Preview Toggle)
+             |
+   Clicks "Join Meeting" -> WebRTC Room Created
+             |
+   Socket.io broadcasts 'call-started' to all Team Members
+             |
+   Team cards display pulsing "Meeting Live" Badge & Notification Sent
+             |
+[ Teammate: Click "Join Call" or Lobby Preview ]
+             |
+   WebRTC Peer Connection Established (Video/Audio/Screen Share Live)
+             |
+(If Disconnected / Leave Accidental)
+             |
+   "Meeting is Live" Banner shows One-Click "Rejoin Call" Button
+             |
+   Rejoins ongoing session seamlessly like Google Meet
 
----
+D. Document & Media Upload Architecture
+Frontend Form Data -> Multer Middleware -> Cloudinary Cloud API -> Returns Secure CDN URL -> Controller saves file URL in PostgreSQL Message Table -> Broadcast to Chat
 
-## 4. Key Modules & Functional Workflows
+8. What Happens When Someone Uses the App
+• A user registers an account, logs in, and is directed to their collaboration dashboard with their active teams list.
+• The user can create a new team or enter a 6-character team invite code to join a colleague's team.
+• Inside a team, members exchange real-time chat messages, send file attachments (stored on Cloudinary), react with emojis, and view live typing indicators.
+• When a member clicks "Start Video Call", they enter the pre-meeting lobby to preview and adjust their camera/mic before entering the room.
+• As soon as the call begins, Socket.io broadcasts an alert to all teammates and sets a live "Meeting Live" badge on the team card.
+• Teammates can click the notification or team card to preview the lobby and join the call. In-call features include screen sharing, mic mute, camera toggle, pinned view, and in-call text chat.
+• If a teammate leaves or gets disconnected, they can click the prominent "Rejoin Call" button to return to the active meeting instantly.
+• Users can open the sidebar Notifications panel to view unread messages, mentions (@user), and call invitations with direct action buttons.
+• If a member chooses to leave a team, a confirmation modal appears, and upon confirming, the team is cleanly removed and the next team is selected.
+• Super Admins can access the discreet Admin Console via the footer to view platform statistics, block/delete users, audit teams, delete inappropriate messages, broadcast system alerts, and manage background job queues.
 
-### A. Video Calling & Meeting Room Suite
-- **Pre-Meeting Lobby**: Users can preview their camera stream, test and toggle their microphone and camera before entering the room.
-- **Team Live Call Indicator**: When a meeting starts, a live pulse badge (*"Meeting Live"*) appears on the team card in the sidebar for all members.
-- **Broadcast Call Notifications**: Starting a call sends instant socket and notification alerts to all team members with direct "Join Call" action buttons.
-- **Google Meet-style Rejoin**: If a user leaves or drops connection unexpectedly, an active call banner and one-click Rejoin button allows immediate re-entry.
-- **In-Call Controls**: Camera toggle, mic mute/unmute, screen share toggle, pinned video tile, floating call chat, dynamic participant grid, and live elapsed call timer.
+9. What Data the App Stores
 
-### B. Real-Time Chat & Direct Messaging
-- **Team Channels**: Real-time group messaging with instant broadcast via Socket.io rooms and persistent database storage.
-- **1-on-1 Direct Chat**: Private messaging with read status indicators and user presence (online/offline).
-- **Mentions & Replies**: Support for `@user` mentions and quote-replies to specific messages.
-- **Rich Media & File Attachments**: Upload and preview images, documents, and files directly in chat streams.
-- **Unread Message Counters**: Real-time unread badges per team and direct conversation.
+User
+Field | Type | Notes
+--- | --- | ---
+id | UUID | Primary Key
+name / email | String | User display name and unique login email
+password | String | Encrypted password hashed with bcryptjs
+profilePic | String | User avatar URL stored on Cloudinary
+role | Enum | User role (SUPER_ADMIN, MEMBER, admin, user)
+isBlocked | Boolean | Account suspension status flag
 
-### C. Sidebar Notifications Center
-- **Sidebar View Toggle**: Clicking the Bell navigation icon switches the sidebar between the Teams list and the Notifications panel.
-- **Multi-Category Tabs**:
-  - `All`: Complete activity feed.
-  - `💬 Msg`: Unread message alerts.
-  - `🏷️ @`: Mention alerts.
-  - `📹 Calls`: Live call invitations and meeting updates.
-- **Direct Interactive Actions**:
-  - `📹 Join Call`: Instantly opens team context and launches meeting lobby.
-  - `💬 Open Chat`: Switches directly to the corresponding channel.
-  - `Mark Read` & `Read All`: Updates read status across server and local persistence.
+Team
+Field | Type | Notes
+--- | --- | ---
+id | UUID | Primary Key
+name | String | Name of the team workspace
+description | String | Brief description of team purpose
+inviteCode | String | Unique 6-character code for joining team
+ownerId | UUID | Foreign Key referencing User (Team Creator)
 
-### D. Team Management & Safe Exit Flow
-- **Create & Join Teams**: Create new teams or join existing teams via 6-character invite codes.
-- **Role Permissions**: Team Creator / Team Admin controls vs. Member permissions.
-- **Safe Leave Team Action**:
-  - Confirmation modal (`modal-leave-team-confirm`) prevents accidental exits.
-  - `DELETE /team/:teamId/leave` API cleanly removes membership.
-  - Automatically transitions to the next available team or displays the empty welcome screen.
+TeamMember
+Field | Type | Notes
+--- | --- | ---
+id | UUID | Primary Key
+teamId | UUID | Foreign Key referencing Team
+userId | UUID | Foreign Key referencing User
+role | Enum | Membership role (TEAM_ADMIN, MEMBER)
+lastReadAt | Date | Timestamp for tracking unread messages
 
-### E. Super Admin Control Console
-- **Discreet Access Point**: Positioned discreetly in the landing page footer, preventing clutter for regular users.
-- **Strict Role Authorization**: Only authenticated users with `SUPER_ADMIN` or `admin` roles can access the console.
-- **Management Capabilities**:
-  - **Platform Analytics**: Total users, active users, total teams, total messages.
-  - **User Management**: Search users, toggle account blocks/unblocks, permanently delete accounts.
-  - **Team Management**: View teams, invite codes, member counts, delete teams.
-  - **Chat Moderation**: Real-time stream of all team messages with instant moderation delete.
-  - **System Controls**: Configure participant limits, API rate limits, and file size limits.
-  - **Broadcast Engine**: Send system-wide broadcast alerts to all connected users.
-  - **Background Worker Queues**: Pause, resume, check status, and retry failed background jobs.
+Message (Team Chat)
+Field | Type | Notes
+--- | --- | ---
+id | UUID | Primary Key
+teamId | UUID | Foreign Key referencing Team
+senderId | UUID | Foreign Key referencing User
+content | Text | Chat message text content
+fileUrl / fileType | String | Cloudinary media link and file extension
+isDeleted | Boolean | Soft delete moderation flag
 
----
+DirectMessage
+Field | Type | Notes
+--- | --- | ---
+id | UUID | Primary Key
+senderId | UUID | Foreign Key referencing sender User
+recipientId | UUID | Foreign Key referencing recipient User
+content | Text | 1-on-1 private message content
+isRead | Boolean | Read receipt status indicator
 
-## 5. Clean Codebase & Directory Structure
+Call
+Field | Type | Notes
+--- | --- | ---
+id | UUID | Primary Key
+callerId | UUID | Foreign Key referencing caller User
+receiverId | UUID | Foreign Key referencing receiver User / Team
+callType | Enum | Call mode (video, audio)
+status | Enum | Call state (initiated, ongoing, ended, missed)
+duration | Number | Total call duration in seconds
 
-The frontend is strictly decoupled into semantic HTML pages, dedicated CSS stylesheets, and modular JavaScript controllers with zero comments for clean maintainability:
+Notification
+Field | Type | Notes
+--- | --- | ---
+id | UUID | Primary Key
+userId | UUID | Foreign Key referencing target User
+type | Enum | Notification type (message, call, mention, team_update)
+title / content | String | Headline and message details
+relatedId | UUID | References related team, message, or call ID
+isRead | Boolean | Read status flag
 
-```
-video_colla/
-├── Backend/
-│   ├── config/              # Database connection & Sequelize setup
-│   ├── controllers/v1/      # REST API route controllers
-│   ├── middleware/          # JWT Auth, Multer, and Admin guards
-│   ├── models/              # Sequelize database models & associations
-│   ├── routes/v1/           # Express API route declarations
-│   ├── service/v1/          # Business logic & DB transactions
-│   ├── socket/              # Socket.io chat & WebRTC signaling handlers
-│   ├── scripts/             # Migration & seed scripts
-│   ├── app.js               # Express application entry point
-│   └── package.json
-│
-├── frontend/
-│   ├── index.html           # Landing page
-│   ├── css/
-│   │   ├── style.css        # Base design tokens, typography, utilities & modals
-│   │   ├── landing.css      # Landing page styles & keyframe animations
-│   │   ├── auth.css         # Auth cards, forms & animated background orbs
-│   │   ├── dashboard.css    # Collaboration hub, chat, video grid & sidebar
-│   │   ├── admin.css        # Super admin layout, data tables & stat cards
-│   │   └── profile.css      # User profile, avatar management & session
-│   ├── js/
-│   │   ├── config.js        # API endpoints, Auth session & apiFetch helper
-│   │   └── pages/
-│   │       ├── landing.js          # Landing page navigation & interactions
-│   │       ├── auth/auth.js        # Login & Signup form handling
-│   │       ├── admin/dashboard.js  # Admin moderation & system control logic
-│   │       ├── user/dashboard.js   # Core App: Chat, WebRTC calls, Sockets, Notifs
-│   │       └── user/profile.js     # Profile updates, avatar upload, password reset
-│   └── pages/
-│       ├── auth/auth.html          # Authentication (Sign in / Sign up)
-│       ├── admin/dashboard.html    # Super Admin Control Console
-│       ├── user/dashboard.html     # User Collaboration Dashboard
-│       └── user/profile.html       # User Profile & Settings
-│
-├── CollabHub_Project_Report.pdf
-├── PROJECT_REPORT.md        # Updated Project Report & Technical Documentation
-└── README.md
-```
+10. Main Pages & Actions (Routes)
 
----
+Area | Sample Routes | Access
+--- | --- | ---
+Auth | POST /api/v1/auth/register<br>POST /api/v1/auth/login | Public (Sign In / Sign Up)
+User Profile | GET /api/v1/user/me<br>PATCH /api/v1/user/me<br>POST /api/v1/user/profile-pic<br>PATCH /api/v1/user/change-password | Logged-in Users
+Team Management | POST /api/v1/team<br>GET /api/v1/team<br>POST /api/v1/team/join<br>DELETE /api/v1/team/:id/leave<br>DELETE /api/v1/team/:id | Logged-in Users / Team Creator
+Team Chat | GET /api/v1/chat/messages/:teamId<br>POST /api/v1/chat/message<br>DELETE /api/v1/chat/message/:id | Team Members
+Direct Messages | GET /api/v1/direct/messages/:userId<br>POST /api/v1/direct/message | Logged-in Users
+Notifications | GET /api/v1/notification<br>PATCH /api/v1/notification/:id/read<br>PATCH /api/v1/notification/read-all | Logged-in Users
+Admin Console | GET /api/v1/admin/analytics<br>GET /api/v1/admin/users<br>PATCH /api/v1/admin/users/:id/block<br>DELETE /api/v1/admin/users/:id<br>GET/DELETE /api/v1/admin/teams<br>GET/DELETE /api/v1/admin/messages<br>POST /api/v1/admin/broadcast<br>POST /api/v1/admin/jobs/:action | Super Admin role only
 
-## 6. Database Schema Summary
+11. Deployment
+I deployed the entire application on Render as a production web service. Since the frontend is built using clean modular HTML5, CSS3, and JavaScript, the Node.js backend serves all frontend files directly using express.static(), eliminating the need for a separate frontend build or complex multi-server deployment. Environment variables like PORT, JWT_SECRET, DATABASE_URL (Supabase PostgreSQL Connection String), and Cloudinary API credentials (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET) are managed securely in the Render environment settings. On the client side, frontend/js/config.js connects to the live backend URL, ensuring smooth socket connections, API requests, and WebRTC peer signaling.
 
-| Table | Primary Key | Key Fields & Foreign Keys | Description |
-| :--- | :--- | :--- | :--- |
-| **Users** | `id` (UUID) | `name`, `email`, `password`, `profilePic`, `role`, `isBlocked` | User identity and account credentials |
-| **Teams** | `id` (UUID) | `name`, `description`, `inviteCode`, `ownerId` (FK -> Users) | Collaboration team workspaces |
-| **TeamMembers** | `id` (UUID) | `teamId` (FK -> Teams), `userId` (FK -> Users), `role`, `lastReadAt` | Team membership & permissions |
-| **Messages** | `id` (UUID) | `teamId` (FK -> Teams), `senderId` (FK -> Users), `content`, `fileUrl`, `fileType`, `isDeleted` | Team channel chat messages |
-| **DirectMessages**| `id` (UUID) | `senderId` (FK -> Users), `recipientId` (FK -> Users), `content`, `isRead` | 1-on-1 private messaging |
-| **Calls** | `id` (UUID) | `callerId` (FK -> Users), `receiverId` (FK -> Users), `callType`, `status`, `duration` | Audio/video call history & logs |
-| **Notifications** | `id` (UUID) | `userId` (FK -> Users), `type`, `title`, `content`, `relatedId`, `isRead` | System and activity notifications |
+12. Future Improvements
+• Multi-party WebRTC SFU/MCU integration to support large video conferences with 50+ concurrent video feeds.
+• End-to-End Encryption (E2EE) for direct messages and private media transfers.
+• Automated Meeting Recording and Cloud Storage to allow users to save and replay team video meetings.
+• AI-Powered Meeting Summarization using LLMs to automatically generate notes and action items from chat discussions.
+• Native Mobile Applications for iOS and Android using React Native or Flutter with push notification support.
 
----
+13. Links
+• GitHub Repository: https://github.com/Kuwarjibetha/CollabHub
+• Backend Live Service URL: https://collabhub-qvx3.onrender.com
+• Frontend Live Website Link: https://collabhub-1-whx9.onrender.com
+• Super Admin Login Credentials: bethakuwarji@gmail.com / Kuwarji@9934
+• User / Alternative Login: bethajikuwa@gmail.com / Kuwarji@9934
 
-## 7. REST API Endpoints Reference
-
-### Authentication & User (`/api/v1/auth`, `/api/v1/user`)
-- `POST /auth/register` — Register a new user account
-- `POST /auth/login` — Authenticate user and receive JWT
-- `GET /user/me` — Fetch current user profile
-- `PATCH /user/me` — Update name and personal information
-- `POST /user/profile-pic` — Upload user avatar to Cloudinary
-- `PATCH /user/change-password` — Change account password
-
-### Teams & Channels (`/api/v1/team`)
-- `POST /team` — Create a new team
-- `GET /team` — List all teams the user belongs to
-- `GET /team/:teamId` — Fetch team details and member list
-- `POST /team/join` — Join a team using an invite code
-- `DELETE /team/:teamId/leave` — Leave a team (with auto-reassignment/cleanup)
-- `DELETE /team/:teamId` — Delete a team (Owner / Super Admin)
-
-### Chat & Messaging (`/api/v1/chat`, `/api/v1/direct`)
-- `GET /chat/messages/:teamId` — Fetch historical messages for a team
-- `POST /chat/message` — Send message with optional media attachment
-- `DELETE /chat/message/:messageId` — Delete a message
-- `GET /direct/messages/:userId` — Fetch direct chat conversation
-- `POST /direct/message` — Send 1-on-1 direct message
-
-### Notifications (`/api/v1/notification`)
-- `GET /notification` — List user notifications
-- `PATCH /notification/:id/read` — Mark a notification as read
-- `PATCH /notification/read-all` — Mark all notifications as read
-
-### Super Admin Console (`/api/v1/admin`)
-- `GET /admin/analytics` — Platform metrics (users, active sessions, teams, messages)
-- `GET /admin/users` — Search and list all registered users
-- `PATCH /admin/users/:id/block` — Toggle user account block/unblock status
-- `DELETE /admin/users/:id` — Permanently delete user account
-- `GET /admin/teams` — List all teams with invite codes & member counts
-- `DELETE /admin/teams/:id` — Force delete a team
-- `GET /admin/messages` — Moderate and view all chat message streams
-- `DELETE /admin/messages/:id` — Delete inappropriate chat message
-- `POST /admin/broadcast` — Send system-wide alert notification
-- `POST /admin/jobs/:action` — Pause, resume, or check background worker queues
-- `POST /admin/jobs/retry-failed` — Re-queue and retry failed background jobs
-
----
-
-## 8. Deployment & Environment Configuration
-
-### Live URLs & Repository
-- **GitHub Repository**: [https://github.com/Kuwarjibetha/CollabHub](https://github.com/Kuwarjibetha/CollabHub)
-- **Backend API Service**: [https://collabhub-qvx3.onrender.com](https://collabhub-qvx3.onrender.com)
-- **Frontend Web Application**: [https://collabhub-1-whx9.onrender.com](https://collabhub-1-whx9.onrender.com)
-
-### Verified Test Credentials
-- **Super Admin Account**:
-  - Email: `bethakuwarji@gmail.com`
-  - Password: `Kuwarji@9934`
-- **Alternative Admin / User Account**:
-  - Email: `bethajikuwa@gmail.com`
-  - Password: `Kuwarji@9934`
-
-### Required Environment Variables (`.env`)
-```ini
-PORT=5000
-NODE_ENV=production
-DATABASE_URL=postgresql://postgres.qvx...:[password]@aws-0-ap-south-1.pooler.supabase.com:6543/postgres?sslmode=require
-JWT_SECRET=super_secret_jwt_key_collabhub_2026
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-CORS_ORIGIN=*
-```
-
----
-
-## 9. Conclusion
-CollabHub successfully delivers an integrated, scalable, and modern real-time collaboration ecosystem. By combining **Node.js, Express, Socket.io, WebRTC, and Supabase PostgreSQL** with a modular frontend architecture, it eliminates tool fragmentation and provides an enterprise-ready platform for messaging, audio/video conferencing, notifications, and team governance.
+14. Conclusion
+CollabHub is a comprehensive, real-time collaboration and video conferencing platform that replaces fragmented third-party tools with an all-in-one digital workspace. By combining instant channel messaging, file sharing, Google Meet-style WebRTC video calling, dedicated notifications, and strict super-admin governance, the platform provides seamless communication for distributed teams. Building this project helped me master full-stack Node.js development, WebRTC peer signaling, real-time WebSocket architecture with Socket.io, cloud relational database design with Supabase PostgreSQL and Sequelize, and clean modular frontend architecture.
