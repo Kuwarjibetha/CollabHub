@@ -1,7 +1,6 @@
 const { TeamMember, Notification } = require("../../models");
 
-// In-memory state is enough for a single Socket.io server. It lets us alert
-// every team member and automatically clears a meeting when its last attendee leaves.
+
 const activeCalls = new Map();
 const socketToUser = new Map();
 
