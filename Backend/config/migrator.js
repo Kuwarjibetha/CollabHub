@@ -5,8 +5,7 @@ async function hasColumn(queryInterface, table, column) {
   return Boolean(schema[column]);
 }
 
-// Only additive migrations live here.  Do not use sync({ alter: true }) in a
-// long-lived MySQL database: Sequelize may recreate indexes on every boot.
+
 async function runMigrations(sequelize) {
   const queryInterface = sequelize.getQueryInterface();
   if (await hasColumn(queryInterface, "users", "isBlocked") === false) {
