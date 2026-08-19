@@ -33,7 +33,7 @@ async function start() {
     await sequelize.sync();
     console.log("Database synced...");
 
-    // Set this once in .env when an administrator account is needed.
+    
     if (process.env.ADMIN_EMAIL) {
       await User.update({ role: "admin" }, { where: { email: process.env.ADMIN_EMAIL } });
     }
