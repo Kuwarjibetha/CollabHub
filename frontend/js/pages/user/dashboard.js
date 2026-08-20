@@ -219,8 +219,8 @@ function connectSocket() {
   }
   socket = io(SOCKET_URL, {
     auth: { token: Auth.getToken() },
-    transports: ["websocket"],
-    reconnectionAttempts: 5,
+    transports: ["websocket", "polling"],
+    reconnectionAttempts: 10,
   });
 
   socket.on("connect", () => {
