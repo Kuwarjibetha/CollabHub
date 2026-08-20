@@ -7,6 +7,7 @@ const v1Routes = require("./routes/v1");
 const initSocket = require("./sockets");
 const { startWorkflows } = require("./workflow");
 const { runMigrations } = require("./config/migrator");
+const healthRoutes = require("./routes/health");
 
 const app = express();
 
@@ -17,6 +18,9 @@ app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
 app.use("/api/v1", v1Routes);
+
+// Health check routes (UptimeRobot + monitoring ke liye)
+app.use("/", healthRoutes);
 
 function createServer() {
   const httpServer = http.createServer(app);
