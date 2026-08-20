@@ -4,6 +4,7 @@ const { TeamMember, Notification } = require("../../models");
 const activeCalls = new Map();
 const socketToUser = new Map();
 
+// Alert all team members
 async function notifyTeam(io, teamId, event, payload, excludeUserId = null) {
   try {
     const members = await TeamMember.findAll({ where: { teamId }, attributes: ["userId"] });
@@ -18,13 +19,13 @@ async function notifyTeam(io, teamId, event, payload, excludeUserId = null) {
 function registerCallHandlers(io, socket) {
   const callRooms = new Set();
 
-  // Send active calls status on demand
+  // Fetch all live meetings
   socket.on("get-active-calls", () => {
     const liveTeamIds = Array.from(activeCalls.keys()).filter((tId) => activeCalls.get(tId)?.size > 0);
     socket.emit("active-calls-list", { liveTeamIds });
   });
 
-  // join call / rejoin call
+  // Join video meeting room
   socket.on("joinCall", async ({ teamId }) => {
     const membership = await TeamMember.findOne({ where: { teamId, userId: socket.user.userId } });
     if (!membership) return socket.emit("errorMessage", { message: "You are not a member of this team" });
@@ -33,18 +34,18 @@ function registerCallHandlers(io, socket) {
     if (!activeCalls.has(teamId)) activeCalls.set(teamId, new Set());
     const currentSockets = activeCalls.get(teamId);
 
-    // 💡 Auto-Replace: Remove any previous socket for this same user (e.g., from another tab or window)
+    // Close older duplicate tabs
     for (const sid of Array.from(currentSockets)) {
       if (sid !== socket.id && socketToUser.get(sid) === socket.user.userId) {
         currentSockets.delete(sid);
         socketToUser.delete(sid);
 
-        // Tell the older tab/window to disconnect cleanly
+        // Tell old tab close
         io.to(sid).emit("call-ended-by-new-tab", {
           message: "You joined this meeting from another tab or window.",
         });
 
-        // Tell other peers to close the stale connection
+        // Notify peers remove old
         socket.to(callRoom).emit("userLeftCall", {
           userId: socket.user.userId,
           socketId: sid,
@@ -57,7 +58,7 @@ function registerCallHandlers(io, socket) {
     currentSockets.add(socket.id);
     socketToUser.set(socket.id, socket.user.userId);
 
-    // Filter existing participants to unique remote users (exclude self)
+    // Get current attendees list
     const seenUserIds = new Set([socket.user.userId]);
     const existingParticipants = [];
     for (const sid of currentSockets) {
@@ -79,7 +80,7 @@ function registerCallHandlers(io, socket) {
       socketId: socket.id,
     });
 
-    // Broadcast meeting is live to all team members
+    // Broadcast meeting is live
     await notifyTeam(io, teamId, "meeting-status-changed", {
       teamId,
       isLive: true,
@@ -89,6 +90,7 @@ function registerCallHandlers(io, socket) {
     console.log(`User ${socket.user.userId} joined call room: ${callRoom}`);
   });
 
+  // Ring and notify team
   socket.on("call-start", async ({ teamId, teamName, callerName }) => {
     const membership = await TeamMember.findOne({ where: { teamId, userId: socket.user.userId } });
     if (!membership) return;
@@ -105,11 +107,11 @@ function registerCallHandlers(io, socket) {
     await notifyTeam(io, teamId, "team-call-started", payload, socket.user.userId);
     await notifyTeam(io, teamId, "meeting-status-changed", payload);
 
-    // Save persistent in-app notification in DB & emit to recipient users
+    // Save notification in database
     try {
       const members = await TeamMember.findAll({ where: { teamId }, attributes: ["userId"] });
       const recipients = members.filter((m) => m.userId !== socket.user.userId);
-      
+
       const notifPromises = recipients.map((m) =>
         Notification.create({
           userId: m.userId,
@@ -118,11 +120,11 @@ function registerCallHandlers(io, socket) {
           content: `${callerName || "A teammate"} started a live meeting in ${teamName || "your team"}. Click to join!`,
           relatedId: teamId,
           isRead: false,
-        }).catch(() => {})
+        }).catch(() => { })
       );
       await Promise.all(notifPromises);
 
-      // Emit real-time notification event to user personal rooms
+      // Send live popup alert
       recipients.forEach((m) => {
         io.to(`user:${m.userId}`).emit("notification", {
           type: "call",
@@ -137,7 +139,7 @@ function registerCallHandlers(io, socket) {
     }
   });
 
-  // webrtc signaling
+  // Send call offer invitation
   socket.on("callOffer", ({ toSocketId, to, offer }) => {
     const target = toSocketId || to;
     io.to(target).emit("callOffer", {
@@ -157,6 +159,7 @@ function registerCallHandlers(io, socket) {
     });
   });
 
+  // Accept call answer response
   socket.on("callAnswer", ({ toSocketId, to, answer }) => {
     const target = toSocketId || to;
     io.to(target).emit("callAnswer", {
@@ -176,6 +179,7 @@ function registerCallHandlers(io, socket) {
     });
   });
 
+  // Exchange network routing candidates
   socket.on("iceCandidate", ({ toSocketId, to, candidate }) => {
     const target = toSocketId || to;
     io.to(target).emit("iceCandidate", {
@@ -193,6 +197,7 @@ function registerCallHandlers(io, socket) {
     });
   });
 
+  // Mute mic or camera
   socket.on("toggleMedia", ({ teamId, audioEnabled, videoEnabled }) => {
     const callRoom = `call-${teamId}`;
     socket.to(callRoom).emit("participantMediaChanged", {
@@ -202,7 +207,7 @@ function registerCallHandlers(io, socket) {
     });
   });
 
-  // call leave
+  // Leave active video call
   socket.on("leaveCall", async ({ teamId }) => {
     const callRoom = `call-${teamId}`;
     socket.leave(callRoom);
@@ -228,6 +233,7 @@ function registerCallHandlers(io, socket) {
     console.log(`User ${socket.user.userId} left call room: ${callRoom}`);
   });
 
+  // End call and destroy
   socket.on("call-end", async ({ teamId }) => {
     const callRoom = `call-${teamId}`;
     socket.to(callRoom).emit("userLeftCall", { userId: socket.user.userId, socketId: socket.id });
@@ -247,7 +253,7 @@ function registerCallHandlers(io, socket) {
     socketToUser.delete(socket.id);
   });
 
-  // disconnect
+  // Clean on unexpected disconnect
   socket.on("disconnect", async () => {
     callRooms.forEach(async (callRoom) => {
       socket.to(callRoom).emit("userLeftCall", { userId: socket.user.userId, socketId: socket.id });
