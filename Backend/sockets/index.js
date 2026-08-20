@@ -2,6 +2,7 @@ const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 const registerChatHandlers = require("./chat");
 const registerCallHandlers = require("./call");   
+const { createAdapter } = require("@socket.io/cluster-adapter");
 
 
 
@@ -12,6 +13,10 @@ function initSocket(httpServer) {
     },
     transports: ["websocket", "polling"],
   });
+
+  // Socket.io Cluster Adapter: Worker ko IPC bridge se jodo
+  // Master (bin/www) aur is Worker ke beech Walkie-Talkie connect ho gaya
+  io.adapter(createAdapter());
 
   io.use((socket, next) => {     // auth middlewa
     const token = socket.handshake.auth?.token;
