@@ -5,8 +5,11 @@ function registerChatHandlers(io, socket) {
 
   // join room 
   socket.on("joinRoom", (teamId) => { // Jab user kisi team ki chat kholta hai, usse us team ke "room" me daal do
-    socket.join(teamId);
-    console.log(`User ${socket.user.userId} joined room: ${teamId}`);
+    if (teamId) {
+      socket.join(String(teamId));
+      socket.join(teamId);
+      console.log(`User ${socket.user?.userId} joined room: ${teamId}`);
+    }
   });
 
 

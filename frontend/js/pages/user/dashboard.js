@@ -229,6 +229,10 @@ function connectSocket() {
       socket.emit("joinRoom", currentTeam.id);
       socket.emit("join-team", currentTeam.id);
     }
+    if (allTeams && allTeams.length > 0) {
+      allTeams.forEach(t => socket.emit("joinRoom", t.id));
+      socket.emit("get-active-calls");
+    }
   });
 
   socket.on("connect_error", (err) => {

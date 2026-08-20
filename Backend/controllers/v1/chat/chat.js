@@ -12,6 +12,7 @@ async function sendMessageController(req, res) {
 
     const io = req.app.get("io");
     if (io) {
+      io.to(String(teamId)).emit("newMessage", message);
       io.to(teamId).emit("newMessage", message);
     }
 
@@ -54,6 +55,7 @@ async function sendFileMessageController(req, res) {
 
     const io = req.app.get("io");
     if (io) {
+      io.to(String(teamId)).emit("newMessage", message);
       io.to(teamId).emit("newMessage", message);
     }
 
