@@ -5,9 +5,14 @@ const activeCalls = new Map();
 const socketToUser = new Map();
 
 async function notifyTeam(io, teamId, event, payload, excludeUserId = null) {
-  const members = await TeamMember.findAll({ where: { teamId }, attributes: ["userId"] });
-  members.filter((member) => member.userId !== excludeUserId)
-    .forEach((member) => io.to(`user:${member.userId}`).emit(event, payload));
+  try {
+    const members = await TeamMember.findAll({ where: { teamId }, attributes: ["userId"] });
+    members
+      .filter((member) => !excludeUserId || String(member.userId) !== String(excludeUserId))
+      .forEach((member) => io.to(`user:${member.userId}`).emit(event, payload));
+  } catch (err) {
+    console.warn("notifyTeam error:", err.message);
+  }
 }
 
 function registerCallHandlers(io, socket) {
@@ -25,16 +30,45 @@ function registerCallHandlers(io, socket) {
     if (!membership) return socket.emit("errorMessage", { message: "You are not a member of this team" });
 
     const callRoom = `call-${teamId}`;
+    if (!activeCalls.has(teamId)) activeCalls.set(teamId, new Set());
+    const currentSockets = activeCalls.get(teamId);
+
+    // 💡 Auto-Replace: Remove any previous socket for this same user (e.g., from another tab or window)
+    for (const sid of Array.from(currentSockets)) {
+      if (sid !== socket.id && socketToUser.get(sid) === socket.user.userId) {
+        currentSockets.delete(sid);
+        socketToUser.delete(sid);
+
+        // Tell the older tab/window to disconnect cleanly
+        io.to(sid).emit("call-ended-by-new-tab", {
+          message: "You joined this meeting from another tab or window.",
+        });
+
+        // Tell other peers to close the stale connection
+        socket.to(callRoom).emit("userLeftCall", {
+          userId: socket.user.userId,
+          socketId: sid,
+        });
+      }
+    }
+
     socket.join(callRoom);
     callRooms.add(callRoom);
-    if (!activeCalls.has(teamId)) activeCalls.set(teamId, new Set());
-    activeCalls.get(teamId).add(socket.id);
+    currentSockets.add(socket.id);
     socketToUser.set(socket.id, socket.user.userId);
 
-    const existingParticipants = [...activeCalls.get(teamId)]
-      .filter((sid) => sid !== socket.id)
-      .map((sid) => ({ socketId: sid, userId: socketToUser.get(sid) }))
-      .filter((p) => p.userId);
+    // Filter existing participants to unique remote users (exclude self)
+    const seenUserIds = new Set([socket.user.userId]);
+    const existingParticipants = [];
+    for (const sid of currentSockets) {
+      if (sid !== socket.id) {
+        const uId = socketToUser.get(sid);
+        if (uId && !seenUserIds.has(uId)) {
+          seenUserIds.add(uId);
+          existingParticipants.push({ socketId: sid, userId: uId });
+        }
+      }
+    }
 
     if (existingParticipants.length) {
       socket.emit("callParticipants", { participants: existingParticipants });
@@ -49,7 +83,7 @@ function registerCallHandlers(io, socket) {
     await notifyTeam(io, teamId, "meeting-status-changed", {
       teamId,
       isLive: true,
-      participantCount: activeCalls.get(teamId)?.size || 1,
+      participantCount: currentSockets.size,
     });
 
     console.log(`User ${socket.user.userId} joined call room: ${callRoom}`);
@@ -104,31 +138,60 @@ function registerCallHandlers(io, socket) {
   });
 
   // webrtc signaling
-  socket.on("callOffer", ({ toSocketId, offer }) => {
-    io.to(toSocketId).emit("callOffer", {
+  socket.on("callOffer", ({ toSocketId, to, offer }) => {
+    const target = toSocketId || to;
+    io.to(target).emit("callOffer", {
       fromSocketId: socket.id,
+      from: socket.id,
       fromUserId: socket.user.userId,
       offer,
     });
   });
-  socket.on("call-offer", ({ to, offer }) => {
-    io.to(to).emit("callOffer", { fromSocketId: socket.id, from: socket.id, fromUserId: socket.user.userId, offer });
-  });
-  socket.on("callAnswer", ({ toSocketId, answer }) => {
-    io.to(toSocketId).emit("callAnswer", {
+  socket.on("call-offer", ({ to, toSocketId, offer }) => {
+    const target = toSocketId || to;
+    io.to(target).emit("callOffer", {
       fromSocketId: socket.id,
+      from: socket.id,
+      fromUserId: socket.user.userId,
+      offer,
+    });
+  });
+
+  socket.on("callAnswer", ({ toSocketId, to, answer }) => {
+    const target = toSocketId || to;
+    io.to(target).emit("callAnswer", {
+      fromSocketId: socket.id,
+      from: socket.id,
+      fromUserId: socket.user.userId,
       answer,
     });
   });
-  socket.on("call-answer", ({ to, answer }) => io.to(to).emit("callAnswer", { fromSocketId: socket.id, from: socket.id, answer }));
-
-  socket.on("iceCandidate", ({ toSocketId, candidate }) => {
-    io.to(toSocketId).emit("iceCandidate", {
+  socket.on("call-answer", ({ to, toSocketId, answer }) => {
+    const target = toSocketId || to;
+    io.to(target).emit("callAnswer", {
       fromSocketId: socket.id,
+      from: socket.id,
+      fromUserId: socket.user.userId,
+      answer,
+    });
+  });
+
+  socket.on("iceCandidate", ({ toSocketId, to, candidate }) => {
+    const target = toSocketId || to;
+    io.to(target).emit("iceCandidate", {
+      fromSocketId: socket.id,
+      from: socket.id,
       candidate,
     });
   });
-  socket.on("ice-candidate", ({ to, candidate }) => io.to(to).emit("iceCandidate", { fromSocketId: socket.id, from: socket.id, candidate }));
+  socket.on("ice-candidate", ({ to, toSocketId, candidate }) => {
+    const target = toSocketId || to;
+    io.to(target).emit("iceCandidate", {
+      fromSocketId: socket.id,
+      from: socket.id,
+      candidate,
+    });
+  });
 
   socket.on("toggleMedia", ({ teamId, audioEnabled, videoEnabled }) => {
     const callRoom = `call-${teamId}`;

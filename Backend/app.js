@@ -18,36 +18,44 @@ app.use("/uploads", express.static("uploads"));
 
 app.use("/api/v1", v1Routes);
 
-const httpServer = http.createServer(app);
-const io = initSocket(httpServer);
-app.set("io", io);
+function createServer() {
+  const httpServer = http.createServer(app);
+  const io = initSocket(httpServer);
+  app.set("io", io);
+  return { app, httpServer, io };
+}
 
+async function initDatabase() {
+  await sequelize.authenticate();
+  console.log("Database connected...");
 
+  await runMigrations(sequelize);
+  await sequelize.sync();
+  console.log("Database synced...");
+
+  if (process.env.ADMIN_EMAIL) {
+    await User.update({ role: "admin" }, { where: { email: process.env.ADMIN_EMAIL } });
+  }
+}
 
 async function start() {
   try {
-    await sequelize.authenticate();
-    console.log("Database connected...");
-
-    await runMigrations(sequelize);
-    await sequelize.sync();
-    console.log("Database synced...");
-
-    
-    if (process.env.ADMIN_EMAIL) {
-      await User.update({ role: "admin" }, { where: { email: process.env.ADMIN_EMAIL } });
-    }
-
+    await initDatabase();
     startWorkflows();
 
+    const { httpServer } = createServer();
     const PORT = process.env.PORT || 5000;
 
     httpServer.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+      console.log(`Server is running on port ${PORT} (PID: ${process.pid})`);
     });
   } catch (err) {
     console.error("Unable to connect to the database:", err);
   }
 }
 
-start();
+if (require.main === module) {
+  start();
+}
+
+module.exports = { app, createServer, initDatabase, start };

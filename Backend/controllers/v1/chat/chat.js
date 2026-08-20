@@ -1,23 +1,18 @@
 const chatService = require("../../../service/v1/chat");
-
-
-
+const { Message } = require("../../../models");
 
 async function sendMessageController(req, res) {
   try {
     const { teamId, content, replyToId } = req.body;
+    const message = await chatService.sendMessage(req.user.userId, {
+      teamId,
+      content,
+      replyToId,
+    });
 
-    if (!teamId || !content) {
-      return res.status(400).json({ success: false, message: "teamId and content are required" });
-    }
-
-    const message = await chatService.sendMessage(req.user.userId, { teamId, content, replyToId });
-
-    // Emit real-time Socket.io event to all members in team room
     const io = req.app.get("io");
     if (io) {
       io.to(teamId).emit("newMessage", message);
-      io.to(teamId).emit("new-message", message);
     }
 
     return res.status(201).json({
@@ -28,33 +23,51 @@ async function sendMessageController(req, res) {
   } catch (err) {
     return res.status(err.statusCode || 500).json({
       success: false,
-      message: err.message || "Something went wrong",
+      message: err.message || "Failed to send message",
     });
   }
 }
 
-async function toggleReactionController(req, res) {
+async function sendFileMessageController(req, res) {
   try {
-    const { messageId } = req.params;
-    const { emoji } = req.body;
-    if (!emoji) return res.status(400).json({ success: false, message: "Emoji is required" });
-    const result = await chatService.toggleReaction(req.user.userId, messageId, emoji);
+    const { teamId, replyToId, content } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file provided",
+      });
+    }
+
+    const fileUrl = req.file.path;
+    const fileType = req.file.mimetype;
+    const fileName = req.file.originalname;
+
+    const message = await chatService.sendMessage(req.user.userId, {
+      teamId,
+      content,
+      replyToId,
+      fileUrl,
+      fileType,
+      fileName,
+    });
+
     const io = req.app.get("io");
-    if (io) io.to(result.teamId).emit("message-reactions", result);
-    return res.status(200).json({ success: true, data: result });
-  } catch (err) { return res.status(err.statusCode || 500).json({ success: false, message: err.message || "Something went wrong" }); }
-}
+    if (io) {
+      io.to(teamId).emit("newMessage", message);
+    }
 
-async function markReadController(req, res) {
-  try {
-    await chatService.markTeamRead(req.user.userId, req.params.teamId);
-    return res.status(200).json({ success: true, message: "Team marked as read" });
-  } catch (err) { return res.status(err.statusCode || 500).json({ success: false, message: err.message || "Something went wrong" }); }
-}
-
-async function getUnreadCountsController(req, res) {
-  try { return res.status(200).json({ success: true, data: await chatService.getUnreadCounts(req.user.userId) }); }
-  catch (err) { return res.status(err.statusCode || 500).json({ success: false, message: err.message || "Something went wrong" }); }
+    return res.status(201).json({
+      success: true,
+      message: "File sent",
+      data: message,
+    });
+  } catch (err) {
+    return res.status(err.statusCode || 500).json({
+      success: false,
+      message: err.message || "Failed to send file",
+    });
+  }
 }
 
 async function getChatHistoryController(req, res) {
@@ -63,8 +76,8 @@ async function getChatHistoryController(req, res) {
     const { limit, offset } = req.query;
 
     const messages = await chatService.getChatHistory(req.user.userId, teamId, {
-      limit: limit ? parseInt(limit) : undefined,
-      offset: offset ? parseInt(offset) : undefined,
+      limit: limit ? Number(limit) : 50,
+      offset: offset ? Number(offset) : 0,
     });
 
     return res.status(200).json({
@@ -75,7 +88,40 @@ async function getChatHistoryController(req, res) {
   } catch (err) {
     return res.status(err.statusCode || 500).json({
       success: false,
-      message: err.message || "Something went wrong",
+      message: err.message || "Failed to fetch chat history",
+    });
+  }
+}
+
+async function getUnreadCountsController(req, res) {
+  try {
+    const counts = await chatService.getUnreadCounts(req.user.userId);
+    return res.status(200).json({
+      success: true,
+      message: "Unread counts fetched",
+      data: counts,
+    });
+  } catch (err) {
+    return res.status(err.statusCode || 500).json({
+      success: false,
+      message: err.message || "Failed to fetch unread counts",
+    });
+  }
+}
+
+async function markReadController(req, res) {
+  try {
+    const { teamId } = req.params;
+    const result = await chatService.markTeamRead(req.user.userId, teamId);
+    return res.status(200).json({
+      success: true,
+      message: "Team marked as read",
+      data: result,
+    });
+  } catch (err) {
+    return res.status(err.statusCode || 500).json({
+      success: false,
+      message: err.message || "Failed to mark team as read",
     });
   }
 }
@@ -85,26 +131,22 @@ async function editMessageController(req, res) {
     const { messageId } = req.params;
     const { content } = req.body;
 
-    if (!content) {
-      return res.status(400).json({ success: false, message: "Content is required" });
-    }
-
     const message = await chatService.editMessage(req.user.userId, messageId, { content });
 
     const io = req.app.get("io");
-    if (io && message.teamId) {
-      io.to(message.teamId).emit("message-edited", { id: messageId, content });
+    if (io) {
+      io.to(message.teamId).emit("message-edited", message);
     }
 
     return res.status(200).json({
       success: true,
-      message: "Message updated",
+      message: "Message edited",
       data: message,
     });
   } catch (err) {
     return res.status(err.statusCode || 500).json({
       success: false,
-      message: err.message || "Something went wrong",
+      message: err.message || "Failed to edit message",
     });
   }
 }
@@ -113,11 +155,14 @@ async function deleteMessageController(req, res) {
   try {
     const { messageId } = req.params;
 
+    const message = await Message.findByPk(messageId);
+    const teamId = message?.teamId;
+
     const result = await chatService.deleteMessage(req.user.userId, messageId);
 
     const io = req.app.get("io");
-    if (io) {
-      io.emit("message-deleted", { id: messageId });
+    if (io && teamId) {
+      io.to(teamId).emit("message-deleted", { id: messageId });
     }
 
     return res.status(200).json({
@@ -127,63 +172,46 @@ async function deleteMessageController(req, res) {
   } catch (err) {
     return res.status(err.statusCode || 500).json({
       success: false,
-      message: err.message || "Something went wrong",
+      message: err.message || "Failed to delete message",
     });
   }
 }
 
-async function sendFileMessageController(req, res) {
+async function toggleReactionController(req, res) {
   try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: "No file uploaded" });
-    }
+    const { messageId } = req.params;
+    const { emoji } = req.body;
 
-    const { teamId, content } = req.body;
-
-    if (!teamId) {
-      return res.status(400).json({ success: false, message: "teamId is required" });
-    }
-
-    let fileType = "document";
-    if (req.file.mimetype.startsWith("image/")) fileType = "image";
-    else if (req.file.mimetype.startsWith("video/")) fileType = "video";
-
-    const message = await chatService.sendMessage(req.user.userId, {
-      teamId,
-      content: content || null,
-      fileUrl: req.file.path,       
-      fileType,
-      fileName: req.file.originalname,
-    });
+    const result = await chatService.toggleReaction(req.user.userId, messageId, emoji);
 
     const io = req.app.get("io");
     if (io) {
-      io.to(teamId).emit("newMessage", message);
-      io.to(teamId).emit("new-message", message);
+      io.to(result.teamId).emit("message-reactions", {
+        messageId: result.messageId,
+        reactions: result.reactions,
+      });
     }
 
-    return res.status(201).json({
+    return res.status(200).json({
       success: true,
-      message: "File message sent",
-      data: message,
+      message: "Reaction updated",
+      data: result,
     });
   } catch (err) {
     return res.status(err.statusCode || 500).json({
       success: false,
-      message: err.message || "Something went wrong",
+      message: err.message || "Failed to update reaction",
     });
   }
 }
 
-
-
 module.exports = {
   sendMessageController,
+  sendFileMessageController,
   getChatHistoryController,
-  sendFileMessageController, 
+  getUnreadCountsController,
+  markReadController,
   editMessageController,
   deleteMessageController,
   toggleReactionController,
-  markReadController,
-  getUnreadCountsController,
 };

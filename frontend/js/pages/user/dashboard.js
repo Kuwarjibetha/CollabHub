@@ -13,8 +13,8 @@ let typingTimer = null;
 let isTyping = false;
 
 let localStream = null;
-let peers = {};           
-let peerMeta = {};        
+let peers = {};
+let peerMeta = {};
 let pinnedTileId = null;
 let callChatOpen = false;
 let callTimerInterval = null;
@@ -29,6 +29,7 @@ const ICE_SERVERS = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 const API = CONFIG.API_BASE;
 const SOCKET_URL = CONFIG.SOCKET_URL;
 const user = Auth.getUser();
+let currentUser = user || {};
 
 async function init() {
   if (!user) return logout();
@@ -112,7 +113,7 @@ async function openTeamAdminModal() {
           if (allTeams.length > 0) {
             await selectTeam(allTeams[0]);
           }
-        } catch (e) {}
+        } catch (e) { }
       }
     }
 
@@ -218,6 +219,7 @@ function connectSocket() {
   }
   socket = io(SOCKET_URL, {
     auth: { token: Auth.getToken() },
+    transports: ["websocket"],
     reconnectionAttempts: 5,
   });
 
@@ -256,7 +258,10 @@ function connectSocket() {
   socket.on("call-answer", handleCallAnswer);
   socket.on("iceCandidate", handleIceCandidate);
   socket.on("ice-candidate", handleIceCandidate);
-  socket.on("call-rejected", () => { showToast("Call Declined", "The other user declined the call.", "info"); endCall(); });
+  socket.on("call-ended-by-new-tab", (data) => {
+    showToast("Meeting Replaced", data?.message || "You joined this meeting from another tab/window.", "warning");
+    endCall();
+  });
   socket.on("userLeftCall", (data) => removePeer(data?.socketId || data?.userId || data));
   socket.on("user-left-call", (data) => removePeer(typeof data === "object" ? (data.socketId || data.userId) : data));
   socket.on("team-call-started", showTeamCallAlert);
@@ -286,20 +291,41 @@ function connectSocket() {
 
   socket.on("callParticipants", ({ participants }) => {
     participants?.forEach(({ socketId, userId }) => {
-      if (socketId && userId) {
+      if (socketId && userId && (!currentUser || String(userId) !== String(currentUser.id))) {
         peerMeta[socketId] = { userId, name: getMemberName(userId) };
       }
     });
+    renderCallParticipants();
   });
   socket.on("userJoinedCall", async ({ socketId, userId }) => {
-    if (!localStream || !socketId || socketId === socket.id) return;
+    if (!socketId || socketId === socket.id) return;
+    if (userId && currentUser && String(userId) === String(currentUser.id)) return; // Ignore self from another tab
+
+    // Close any previous peer connection for this same user if they reconnected
+    if (userId) {
+      const oldSid = Object.keys(peerMeta).find((sid) => sid !== socketId && String(peerMeta[sid]?.userId) === String(userId));
+      if (oldSid) removePeer(oldSid);
+    }
+
     if (peers[socketId]) return;
     try {
+      if (!localStream) {
+        try {
+          localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+          openCallOverlay();
+          addVideoTile(localStream, currentUser?.name || currentUser?.email || "You", true);
+        } catch (e) {
+          localStream = createSyntheticStream();
+          openCallOverlay();
+          addVideoTile(localStream, currentUser?.name || currentUser?.email || "You", true);
+        }
+      }
       peerMeta[socketId] = { userId, name: getMemberName(userId) };
       const pc = createPeer(socketId);
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       socket.emit("callOffer", { toSocketId: socketId, offer });
+      renderCallParticipants();
     } catch (err) { console.warn("Could not connect call participant", err); }
   });
   socket.on("message-reactions", ({ messageId, reactions }) => renderReactions(messageId, reactions));
@@ -422,7 +448,7 @@ function renderTeams(teams) {
 
     const name = team.name || "Unnamed";
     const initials = name.substring(0, 2).toUpperCase();
-    const colors = ["#7c3aed","#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6"];
+    const colors = ["#7c3aed", "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
     const color = colors[name.charCodeAt(0) % colors.length];
 
     el.innerHTML = `
@@ -478,7 +504,7 @@ async function selectTeam(team) {
   updateAdminVisibility();
 
   await Promise.all([loadMembers(team.id), loadChatHistory(team.id)]);
-  apiFetch(`/chat/${team.id}/read`, { method: "PATCH" }).catch(() => {});
+  apiFetch(`/chat/${team.id}/read`, { method: "PATCH" }).catch(() => { });
 }
 
 async function loadMembers(teamId) {
@@ -487,7 +513,7 @@ async function loadMembers(teamId) {
     const members = res?.data || res?.members || (Array.isArray(res) ? res : []);
     renderMembers(members);
   } catch (err) {
-    
+
   }
 }
 
@@ -606,7 +632,7 @@ function renderMessage(msg, scroll = true, targetAreaId = "messages-area") {
   el.className = `msg${isOwn ? " own" : ""}`;
   if (msg.id) el.id = `msg-${msg.id}`;
 
-  const avatarContent = senderPic 
+  const avatarContent = senderPic
     ? `<img src="${senderPic.startsWith('http') ? senderPic : SOCKET_URL + (senderPic.startsWith('/') ? '' : '/') + senderPic}" class="avatar avatar-sm" style="object-fit:cover;border-radius:50%;" />`
     : `<div class="avatar avatar-sm">${initials}</div>`;
 
@@ -795,18 +821,18 @@ function handleNewMessage(msg) {
     renderMessage(msg, true);
     renderMessage(msg, true, "call-messages-area");
     if (!isOwn) {
-      apiFetch(`/chat/${currentTeam.id}/read`, { method: "PATCH" }).catch(() => {});
+      apiFetch(`/chat/${currentTeam.id}/read`, { method: "PATCH" }).catch(() => { });
       if (isMentioned) {
         showToast(`🏷️ @Mention from ${senderName}`, msg.content || "Mentioned you in chat", "info");
         fetchAndRenderNotifications();
       }
     }
   } else {
-    
+
     if (!isOwn) {
       teamUnreadCounts[msg.teamId] = (teamUnreadCounts[msg.teamId] || 0) + 1;
       updateTeamUnreadBadge(msg.teamId, teamUnreadCounts[msg.teamId]);
-      
+
       if (isMentioned) {
         showToast(`🏷️ @Mention in ${teamName}`, `${senderName}: ${msg.content}`, "info");
       } else {
@@ -946,7 +972,7 @@ async function createTeam() {
     });
     closeModal("modal-create-team");
     if (nameInput) nameInput.value = "";
-    
+
     const newTeam = res?.data || res?.team || res;
     const inviteCode = newTeam?.inviteCode || newTeam?.code || "";
     showToast("✅ Team Created!", `"${name}" is ready!${inviteCode ? " Code: " + inviteCode : ""}`, "success");
@@ -1173,16 +1199,54 @@ function switchCallPanel(tab, el) {
 
 function renderCallParticipants() {
   const list = document.getElementById("call-participants-list");
-  if (!list || !currentTeam) return;
-  const members = currentTeam.members || [];
-  list.innerHTML = members.map(m => `
-    <div class="call-participant-item">
-      <div class="avatar avatar-sm">${(m.name||m.email||"?").charAt(0).toUpperCase()}</div>
-      <span style="font-size:0.84rem;flex:1;">${m.name||m.email}</span>
-      <div class="call-participant-icons">
-        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="var(--clr-success)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+  if (!list) return;
+
+  const currentU = (typeof currentUser !== "undefined" && currentUser) || Auth.getUser() || user || {};
+  const participants = [
+    {
+      userId: currentU.id || "local",
+      name: (currentU.name || currentU.email || "You") + " (You)",
+      isLocal: true,
+      audio: typeof isMuted !== "undefined" ? !isMuted : true,
+      video: typeof isVideoOff !== "undefined" ? !isVideoOff : true,
+    }
+  ];
+
+  const seenIds = new Set([String(currentU.id)]);
+  Object.keys(peerMeta).forEach((sid) => {
+    const meta = peerMeta[sid];
+    if (meta && meta.userId && !seenIds.has(String(meta.userId))) {
+      seenIds.add(String(meta.userId));
+      participants.push({
+        userId: meta.userId,
+        name: meta.name || getMemberName(meta.userId) || "Teammate",
+        isLocal: false,
+        audio: true,
+        video: true,
+      });
+    }
+  });
+
+  list.innerHTML = participants.map(p => `
+    <div class="call-participant-item" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+      <div class="avatar avatar-sm" style="width:32px;height:32px;border-radius:50%;background:var(--clr-primary);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:0.8rem;">
+        ${(p.name || "?").charAt(0).toUpperCase()}
       </div>
-    </div>`).join("");
+      <div style="display:flex;flex-direction:column;flex:1;min-width:0;">
+        <span style="font-size:0.85rem;font-weight:600;color:var(--clr-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+          ${escapeHtml(p.name)}
+        </span>
+        <span style="font-size:0.75rem;color:var(--clr-text-muted);">
+          ${p.isLocal ? "Local user" : "Connected in call"}
+        </span>
+      </div>
+      <div class="call-participant-icons" style="display:flex;gap:6px;align-items:center;">
+        <span style="display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;padding:2px 8px;border-radius:12px;background:rgba(34,197,94,0.15);color:#22c55e;font-weight:500;">
+          <span style="width:6px;height:6px;border-radius:50%;background:#22c55e;"></span> In Call
+        </span>
+      </div>
+    </div>
+  `).join("");
 }
 
 function toggleCallPeople() {
@@ -1228,24 +1292,47 @@ async function startCall(announce = true, skipMediaSetup = false) {
   }
   activeCallTeamId = currentTeam.id;
   document.getElementById("call-title").textContent = currentTeam.name;
+  renderCallParticipants();
 }
 
 function handleIncomingCall(data) {
   if (data?.offer) {
     (async () => {
       try {
-        if (!localStream) await startCall(false);
-        const from = data.fromSocketId || data.from;
-        if (peers[from]) return;
-        if (data.fromUserId) {
-          peerMeta[from] = { userId: data.fromUserId, name: getMemberName(data.fromUserId) };
+        const fromUserId = data.fromUserId;
+        // Ignore offer from own account (e.g. from another tab/window)
+        if (fromUserId && currentUser && String(fromUserId) === String(currentUser.id)) return;
+
+        if (!localStream) {
+          try {
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            openCallOverlay();
+            addVideoTile(localStream, currentUser?.name || currentUser?.email || "You", true);
+          } catch (e) {
+            localStream = createSyntheticStream();
+            openCallOverlay();
+            addVideoTile(localStream, currentUser?.name || currentUser?.email || "You", true);
+          }
         }
+
+        const from = data.fromSocketId || data.from;
+
+        // Remove stale peer if user reconnected with new socket
+        if (fromUserId) {
+          const oldSid = Object.keys(peerMeta).find((sid) => sid !== from && String(peerMeta[sid]?.userId) === String(fromUserId));
+          if (oldSid) removePeer(oldSid);
+          peerMeta[from] = { userId: fromUserId, name: getMemberName(fromUserId) };
+        }
+
+        if (peers[from]) return;
         const pc = createPeer(from);
-        await pc.setRemoteDescription(data.offer);
+        const desc = data.offer?.type ? data.offer : { type: "offer", sdp: data.offer.sdp || data.offer };
+        await pc.setRemoteDescription(new RTCSessionDescription(desc));
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
         socket.emit("callAnswer", { toSocketId: from, answer });
-      } catch (err) { showToast("Call error", "Could not join the video call.", "error"); }
+        renderCallParticipants();
+      } catch (err) { console.warn("Could not join the video call.", err); }
     })();
     return;
   }
@@ -1308,29 +1395,41 @@ function rejectCall() {
 }
 
 async function handleCallAnswer(data) {
-  const pc = peers[data.from] || peers[data.fromSocketId];
+  const fromId = data.from || data.fromSocketId;
+  const pc = peers[fromId];
   if (!pc) return;
-  await pc.setRemoteDescription(data.answer);
+  try {
+    const desc = data.answer?.type ? data.answer : { type: "answer", sdp: data.answer.sdp || data.answer };
+    await pc.setRemoteDescription(new RTCSessionDescription(desc));
+    renderCallParticipants();
+  } catch (err) {
+    console.warn("Could not set remote answer:", err);
+  }
 }
 
 async function handleIceCandidate(data) {
-  const pc = peers[data.from] || peers[data.fromSocketId];
-  if (!pc) return;
+  const fromId = data.from || data.fromSocketId;
+  const pc = peers[fromId];
+  if (!pc || !data.candidate) return;
   try {
-    await pc.addIceCandidate(data.candidate);
-  } catch (e) {  }
+    await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+  } catch (e) {
+    console.warn("Could not add ice candidate:", e);
+  }
 }
 
 function createPeer(socketId) {
   if (peers[socketId]) {
-    peers[socketId].close();
+    try { peers[socketId].close(); } catch(e) {}
     delete peers[socketId];
   }
 
   const pc = new RTCPeerConnection(ICE_SERVERS);
   peers[socketId] = pc;
 
-  localStream?.getTracks().forEach(track => pc.addTrack(track, localStream));
+  if (localStream) {
+    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+  }
 
   pc.onicecandidate = (e) => {
     if (e.candidate) {
@@ -1340,11 +1439,13 @@ function createPeer(socketId) {
 
   const remoteStream = new MediaStream();
   pc.ontrack = (e) => {
-    if (!remoteStream.getTracks().find((t) => t.id === e.track.id)) {
-      remoteStream.addTrack(e.track);
+    const stream = (e.streams && e.streams[0]) ? e.streams[0] : remoteStream;
+    if (!stream.getTracks().find((t) => t.id === e.track.id)) {
+      stream.addTrack(e.track);
     }
-    const name = peerMeta[socketId]?.name || getMemberName(peerMeta[socketId]?.userId) || "Member";
-    addOrUpdateVideoTile(socketId, remoteStream, name, false);
+    const name = peerMeta[socketId]?.name || getMemberName(peerMeta[socketId]?.userId) || "Teammate";
+    addOrUpdateVideoTile(socketId, stream, name, false);
+    renderCallParticipants();
   };
 
   return pc;
@@ -1352,19 +1453,22 @@ function createPeer(socketId) {
 
 function removePeer(id) {
   const socketId = resolvePeerSocketId(id) || id;
+  const userId = peerMeta[socketId]?.userId;
+
   if (peers[socketId]) {
-    peers[socketId].close();
+    try { peers[socketId].close(); } catch(e) {}
     delete peers[socketId];
   }
   delete peerMeta[socketId];
 
-  const tile = document.getElementById(`tile-${socketId}`);
+  const tile = (userId && document.getElementById(`tile-user-${userId}`)) || document.getElementById(`tile-${socketId}`);
   if (tile) tile.remove();
 
-  if (pinnedTileId === socketId) unpinVideo();
+  if (pinnedTileId === socketId || (userId && pinnedTileId === `user-${userId}`)) unpinVideo();
   else if (pinnedTileId) renderSpotlight();
 
   updateCallGrid();
+  renderCallParticipants();
 }
 
 function openCallOverlay() {
@@ -1377,16 +1481,25 @@ function openCallOverlay() {
   if (unpinBtn) unpinBtn.style.display = "none";
   syncCallChat();
   startCallTimer();
+  renderCallParticipants();
 }
 
 function addOrUpdateVideoTile(tileId, stream, label, isLocal) {
   const container = document.getElementById("call-videos");
-  const id = isLocal ? "local" : tileId;
-  let tile = document.getElementById(`tile-${id}`);
+  if (!container) return;
+
+  const userId = peerMeta[tileId]?.userId;
+  const id = isLocal ? "local" : (userId ? `user-${userId}` : tileId);
+
+  let tile = document.getElementById(`tile-${id}`) || document.getElementById(`tile-${tileId}`);
 
   if (tile) {
+    tile.id = `tile-${id}`;
     const video = tile.querySelector("video");
-    if (video && video.srcObject !== stream) video.srcObject = stream;
+    if (video && video.srcObject !== stream) {
+      video.srcObject = stream;
+      video.play().catch(() => {});
+    }
     const labelEl = tile.querySelector(".video-tile-label");
     if (labelEl) labelEl.innerHTML = `${isLocal ? "🟢" : "👤"} ${escapeHtml(label)}`;
     if (pinnedTileId) renderSpotlight();
@@ -1401,7 +1514,10 @@ function addOrUpdateVideoTile(tileId, stream, label, isLocal) {
   video.srcObject = stream;
   video.autoplay = true;
   video.playsInline = true;
-  if (isLocal) video.muted = true;
+  if (isLocal) {
+    video.muted = true;
+  }
+  video.play().catch(() => {});
 
   tile.innerHTML = `
     <div class="video-tile-pin-hint">Click for fullscreen</div>
@@ -1575,7 +1691,7 @@ async function toggleScreenShare() {
       if (sender) sender.replaceTrack(videoTrack);
     });
     videoTrack.onended = () => {
-      
+
       if (localStream) {
         const cameraTrack = localStream.getVideoTracks()[0];
         Object.values(peers).forEach(pc => {
@@ -1685,7 +1801,7 @@ async function openProfileModal() {
       Auth.setSession(Auth.getToken(), { ...user, ...u });
     }
   } catch (e) {
-    
+
   }
 
   const currentUser = Auth.getUser() || user;
@@ -1921,7 +2037,7 @@ function renderNotificationsList(notifications) {
     filtered.forEach(n => {
       const item = document.createElement("div");
       const isRead = n.isRead;
-      
+
       let typeIcon = "💬";
       let typeBadge = "Message";
       let bgStyle = isRead ? 'rgba(255,255,255,0.03)' : 'rgba(26,115,232,0.12)';

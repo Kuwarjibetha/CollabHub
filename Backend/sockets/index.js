@@ -10,6 +10,7 @@ function initSocket(httpServer) {
     cors: {
       origin: process.env.FRONTEND_URL || "*",
     },
+    transports: ["websocket", "polling"],
   });
 
   io.use((socket, next) => {     // auth middlewa
