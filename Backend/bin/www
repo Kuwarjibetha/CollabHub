@@ -6,7 +6,7 @@ const { startWorkflows } = require("../workflow");
 const { setupPrimary } = require("@socket.io/cluster-adapter");
 
 const totalCPUs = os.cpus().length;
-const numWorkers = process.env.WORKERS ? parseInt(process.env.WORKERS, 10) : 4;
+const numWorkers = Math.max(1, process.env.WORKERS ? Math.min(parseInt(process.env.WORKERS, 10), totalCPUs) : totalCPUs);
 const PORT = process.env.PORT || 5000;
 
 
@@ -26,7 +26,6 @@ if (cluster.isPrimary || cluster.isMaster) {
             }
 
             // Socket.io Cluster Adapter: Master/Primary process acts as IPC bridge
-            // Jab Worker 1 emit karta hai, Primary use Worker 2, 3, 4 tak forward karta hai
             setupPrimary();
 
             // Self-Healing / Auto-Recovery if any worker crashes

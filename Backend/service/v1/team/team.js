@@ -2,10 +2,7 @@ const { nanoid } = require("nanoid");
 const { sequelize, Team, TeamMember, User, Message, MessageReaction } = require("../../../models");
 const { Op } = require("sequelize");
 
-/**
- * Create a team with Database Transaction
- * Wraps Team creation and TeamMember (Admin) assignment in an atomic transaction.
- */
+// create team 
 async function createTeam(userId, { name }) {
   const t = await sequelize.transaction();
 
@@ -38,7 +35,7 @@ async function createTeam(userId, { name }) {
   }
 }
 
-// Join team using invite code (Resilient case-insensitive & character-flexible match)
+// Join team using invite code 
 async function joinTeam(userId, { inviteCode }) {
   try {
     const rawCode = (inviteCode || "").trim();
@@ -49,7 +46,7 @@ async function joinTeam(userId, { inviteCode }) {
       throw error;
     }
 
-    // Flexible match: exact, with/without hyphen/underscore, and case-insensitive
+    // Flexible match
     const team = await Team.findOne({
       where: {
         [Op.or]: [
@@ -114,10 +111,7 @@ async function getMyTeams(userId) {
   }
 }
 
-/**
- * Leave team with Database Transaction
- * Atomically reassigns ownership if creator leaves and destroys membership.
- */
+// leave team 
 async function leaveTeam(userId, teamId) {
   const membership = await TeamMember.findOne({ where: { userId, teamId } });
 
@@ -222,10 +216,7 @@ async function removeMember(requesterId, teamId, memberId) {
   }
 }
 
-/**
- * Delete team by owner with Database Transaction
- * Atomically cascades deletions of reactions, messages, team members, and the team.
- */
+// delete team by owner
 async function deleteTeamByOwner(userId, teamId) {
   const team = await Team.findByPk(teamId);
   if (!team) {
@@ -237,7 +228,7 @@ async function deleteTeamByOwner(userId, teamId) {
   const t = await sequelize.transaction();
 
   try {
-    // 1. Delete message reactions and messages
+    //  Delete message reactions and messages
     const messages = await Message.findAll({
       where: { teamId },
       attributes: ["id"],
@@ -257,13 +248,13 @@ async function deleteTeamByOwner(userId, teamId) {
       transaction: t,
     });
 
-    // 2. Delete team members
+    //  Delete team members
     await TeamMember.destroy({
       where: { teamId },
       transaction: t,
     });
 
-    // 3. Delete the team itself
+    //  Delete the team itself
     await team.destroy({ transaction: t });
 
     await t.commit();

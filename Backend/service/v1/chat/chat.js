@@ -13,10 +13,7 @@ async function verifyTeamMembership(userId, teamId) {
   return membership;
 }
 
-/**
- * Send message with Database Transaction
- * Atomically saves the Message and creates any @Mention Notifications in DB.
- */
+//send mess
 async function sendMessage(
   userId,
   { teamId, content, replyToId, fileUrl, fileType, fileName }
@@ -32,7 +29,7 @@ async function sendMessage(
   const t = await sequelize.transaction();
 
   try {
-    // 1. Create message record
+    // Create message record
     const message = await Message.create(
       {
         senderId: userId,
@@ -46,13 +43,13 @@ async function sendMessage(
       { transaction: t }
     );
 
-    // 2. Fetch full message with sender profile
+    // Fetch full message with sender profile
     const fullMessage = await Message.findByPk(message.id, {
       include: [{ model: User, as: "sender", attributes: ["id", "name", "profilePic"] }],
       transaction: t,
     });
 
-    // 3. Mention notifications handling within transaction
+    
     if (content) {
       const members = await TeamMember.findAll({
         where: { teamId },
@@ -81,10 +78,10 @@ async function sendMessage(
       }
     }
 
-    // 4. Commit transaction (Message + Mention Notifications)
+    
     await t.commit();
 
-    // 5. Enqueue background asynchronous worker notification job
+    
     enqueueNotificationJob({
       teamId,
       excludeUserId: userId,
