@@ -30,19 +30,21 @@ function registerChatHandlers(io, socket) {
     }
   });
 
-  // typeing indic
   const typingStart = ({ teamId }) => {
-    socket.to(teamId).emit("userTyping", {
-      userId: socket.user.userId,
+    if (!teamId) return;
+    socket.to(String(teamId)).emit("userTyping", {
+      userId: socket.user?.userId,
+      teamId: String(teamId),
     });
   };
   socket.on("typing", typingStart);
   socket.on("typing-start", typingStart);
 
-
   const typingStop = ({ teamId }) => {
-    socket.to(teamId).emit("userStoppedTyping", {
-      userId: socket.user.userId,
+    if (!teamId) return;
+    socket.to(String(teamId)).emit("userStoppedTyping", {
+      userId: socket.user?.userId,
+      teamId: String(teamId),
     });
   };
   socket.on("stopTyping", typingStop);

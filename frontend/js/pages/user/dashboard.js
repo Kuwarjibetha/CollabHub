@@ -250,8 +250,8 @@ function connectSocket() {
     showToast(data?.title || "Group Notification", data?.content || "New group update", "info");
     fetchAndRenderNotifications();
   });
-  socket.off("userTyping").on("userTyping", (data) => handleTypingEvent({ isTyping: true, userName: data?.userName || data?.name || "Someone", teamId: currentTeam?.id }));
-  socket.off("userStoppedTyping").on("userStoppedTyping", () => handleTypingEvent({ isTyping: false }));
+  socket.off("userTyping").on("userTyping", (data) => handleTypingEvent({ isTyping: true, teamId: data?.teamId || currentTeam?.id, userId: data?.userId }));
+  socket.off("userStoppedTyping").on("userStoppedTyping", (data) => handleTypingEvent({ isTyping: false, teamId: data?.teamId || currentTeam?.id, userId: data?.userId }));
 
   socket.on("user-online", (userId) => { onlineUsers.add(userId); updateMembersUI(); });
   socket.on("user-offline", (userId) => { onlineUsers.delete(userId); updateMembersUI(); });
@@ -940,11 +940,14 @@ function stopTyping() {
 }
 
 function handleTypingEvent(data) {
-  if (!currentTeam || data.teamId !== currentTeam.id) return;
+  if (!currentTeam || (data.teamId && String(data.teamId) !== String(currentTeam.id))) return;
+  const currentUserId = (Auth.getUser() || user)?.id;
+  if (data.userId && currentUserId && String(data.userId) === String(currentUserId)) return;
   const indicator = document.getElementById("typing-indicator");
   const text = document.getElementById("typing-text");
+  if (!indicator || !text) return;
   if (data.isTyping) {
-    text.textContent = `${data.userName || "Someone"} is typing...`;
+    text.textContent = "Someone is typing...";
     indicator.style.display = "flex";
   } else {
     indicator.style.display = "none";
