@@ -6,8 +6,7 @@ function registerChatHandlers(io, socket) {
   // join room 
   socket.on("joinRoom", (teamId) => { // Jab user kisi team ki chat kholta hai, usse us team ke "room" me daal do
     if (teamId) {
-      socket.join(String(teamId));
-      socket.join(teamId);
+      socket.join(String(teamId)); // String type ensure kiya — consistent room name
       console.log(`User ${socket.user?.userId} joined room: ${teamId}`);
     }
   });
@@ -25,7 +24,7 @@ function registerChatHandlers(io, socket) {
         replyToId,
       });
 
-      io.to(teamId).emit("newMessage", message);
+      io.to(String(teamId)).emit("newMessage", message);
     } catch (err) {
       socket.emit("errorMessage", { message: err.message || "Failed to send message" });
     }

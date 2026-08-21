@@ -22,12 +22,14 @@ if (cluster.isPrimary) {
             startWorkflows();
 
 
+            // Socket.io Cluster Adapter: Master/Primary process acts as IPC bridge
+            // setupPrimary() PEHLE — workers fork hone se pehle bridge ready hona chahiye
+            setupPrimary();
+
             for (let i = 0; i < numWorkers; i++) {
                 cluster.fork();
             }
 
-            // Socket.io Cluster Adapter: Master/Primary process acts as IPC bridge
-            setupPrimary();
 
             // Self-Healing / Auto-Recovery if any worker crashes
             cluster.on("exit", (worker, code, signal) => {
