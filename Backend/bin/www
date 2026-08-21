@@ -23,7 +23,6 @@ if (cluster.isPrimary) {
 
 
             // Socket.io Cluster Adapter: Master/Primary process acts as IPC bridge
-            // setupPrimary() PEHLE — workers fork hone se pehle bridge ready hona chahiye
             setupPrimary();
 
             for (let i = 0; i < numWorkers; i++) {
