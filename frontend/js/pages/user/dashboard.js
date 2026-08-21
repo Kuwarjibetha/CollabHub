@@ -5,6 +5,7 @@ if (!Auth.isLoggedIn()) {
 }
 
 let socket = null;
+const joinedRooms = new Set();
 let currentTeam = null;
 let allTeams = [];
 let teamMembers = [];
@@ -21,6 +22,7 @@ let callTimerInterval = null;
 let callSeconds = 0;
 let isMicOn = true;
 let isVideoOn = true;
+let screenTrack = null;       // tracks active screen share track
 let pendingCallData = null;
 let pendingTeamCall = null;
 let activeCallTeamId = null;
@@ -30,6 +32,15 @@ const API = CONFIG.API_BASE;
 const SOCKET_URL = CONFIG.SOCKET_URL;
 const user = Auth.getUser();
 let currentUser = user || {};
+
+function joinTeamRoom(teamId) {
+  if (!socket || !socket.connected || !teamId) return;
+  const roomId = String(teamId);
+  if (joinedRooms.has(roomId)) return;
+
+  joinedRooms.add(roomId);
+  socket.emit("joinRoom", roomId);
+}
 
 async function init() {
   if (!user) return logout();
@@ -217,6 +228,8 @@ function connectSocket() {
     console.warn("Socket.io client library not loaded yet.");
     return;
   }
+  if (socket && (socket.connected || socket.active)) return;
+
   socket = io(SOCKET_URL, {
     auth: { token: Auth.getToken() },
     transports: ["websocket", "polling"],
@@ -225,12 +238,13 @@ function connectSocket() {
 
   socket.on("connect", () => {
     console.log("Socket connected:", socket.id);
+    joinedRooms.clear();
     if (currentTeam) {
-      socket.emit("joinRoom", currentTeam.id);
+      joinTeamRoom(currentTeam.id);
       socket.emit("join-team", currentTeam.id);
     }
     if (allTeams && allTeams.length > 0) {
-      allTeams.forEach(t => socket.emit("joinRoom", t.id));
+      allTeams.forEach(t => joinTeamRoom(t.id));
       socket.emit("get-active-calls");
     }
   });
@@ -241,6 +255,7 @@ function connectSocket() {
 
   socket.on("disconnect", () => {
     console.warn("Socket disconnected");
+    joinedRooms.clear();
   });
 
   socket.off("newMessage").on("newMessage", handleNewMessage);
@@ -413,7 +428,7 @@ async function loadTeams() {
       selectTeam(allTeams[0]);
     }
     if (socket && socket.connected) {
-      allTeams.forEach(t => socket.emit("joinRoom", t.id));
+      allTeams.forEach(t => joinTeamRoom(t.id));
       socket.emit("get-active-calls");
     }
   } catch (err) {
@@ -501,7 +516,7 @@ async function selectTeam(team) {
   if (startCallBtn) startCallBtn.style.display = "flex";
 
   if (socket) {
-    socket.emit("joinRoom", team.id);
+    joinTeamRoom(team.id);
     socket.emit("join-team", team.id);
   }
 
@@ -1690,15 +1705,33 @@ function toggleVideo() {
 }
 
 async function toggleScreenShare() {
+  // ── STOP: already sharing → stop cleanly without browser popup ──
+  if (screenTrack) {
+    screenTrack.stop();
+    screenTrack = null;
+    if (localStream) {
+      const cameraTrack = localStream.getVideoTracks()[0];
+      Object.values(peers).forEach(pc => {
+        const sender = pc.getSenders().find(s => s.track?.kind === "video");
+        if (sender && cameraTrack) sender.replaceTrack(cameraTrack);
+      });
+    }
+    document.getElementById("ctrl-screen").classList.remove("active");
+    showToast("Screen Share", "Screen sharing stopped.", "info");
+    return;
+  }
+
+  // ── START: not sharing → open browser picker ──
   try {
     const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-    const videoTrack = screenStream.getVideoTracks()[0];
+    screenTrack = screenStream.getVideoTracks()[0];
     Object.values(peers).forEach(pc => {
       const sender = pc.getSenders().find(s => s.track?.kind === "video");
-      if (sender) sender.replaceTrack(videoTrack);
+      if (sender) sender.replaceTrack(screenTrack);
     });
-    videoTrack.onended = () => {
-
+    // User clicks "Stop sharing" in browser bar → treat same as button click
+    screenTrack.onended = () => {
+      screenTrack = null;
       if (localStream) {
         const cameraTrack = localStream.getVideoTracks()[0];
         Object.values(peers).forEach(pc => {
@@ -1706,6 +1739,7 @@ async function toggleScreenShare() {
           if (sender && cameraTrack) sender.replaceTrack(cameraTrack);
         });
       }
+      document.getElementById("ctrl-screen").classList.remove("active");
     };
     document.getElementById("ctrl-screen").classList.add("active");
     showToast("Screen Sharing", "Screen share started.", "info");
