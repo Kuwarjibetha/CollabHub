@@ -10,7 +10,8 @@ const numWorkers = Math.max(1, process.env.WORKERS ? Math.min(parseInt(process.e
 const PORT = process.env.PORT || 5000;
 
 
-if (cluster.isPrimary || cluster.isMaster) {
+
+if (cluster.isPrimary) {
 
     console.log(` Primary Process PID: ${process.pid} is running`);
     console.log(` System has ${totalCPUs} CPU Core(s). Spawning ${numWorkers} Workers..`);
