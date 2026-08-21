@@ -1,6 +1,14 @@
 const chatService = require("../../../service/v1/chat");
 const { Message } = require("../../../models");
 
+// Maps full MIME type string → DB fileType ENUM ("image" | "video" | "document")
+function getFileType(mimetype) {
+  if (!mimetype) return "document";
+  if (mimetype.startsWith("image/")) return "image";
+  if (mimetype.startsWith("video/")) return "video";
+  return "document"; // pdf, docx, xlsx, zip, etc.
+}
+
 async function sendMessageController(req, res) {
   try {
     const { teamId, content, replyToId } = req.body;
@@ -41,7 +49,7 @@ async function sendFileMessageController(req, res) {
     }
 
     const fileUrl = req.file.path;
-    const fileType = req.file.mimetype;
+    const fileType = getFileType(req.file.mimetype); // maps "image/jpeg" → "image" etc.
     const fileName = req.file.originalname;
 
     const message = await chatService.sendMessage(req.user.userId, {
