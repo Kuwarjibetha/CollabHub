@@ -1,11 +1,15 @@
 const adminService = require("../../../service/v1/admin");
 
 async function getAllUsersController(req, res) {
+  t
   try {
     const { search } = req.query;
     const users = await adminService.getAllUsers({ search });
+    c
     return res.status(200).json({ success: true, message: "Users fetched", data: users });
+  
   } catch (err) {
+    r
     return res.status(err.statusCode || 500).json({ success: false, message: err.message || "Something went wrong" });
   }
 }
