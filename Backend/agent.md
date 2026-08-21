@@ -1,6 +1,10 @@
 # CollabHub — Backend Agent Guide
 
 > **This file is for AI agents.** It contains the full project context — code structure, data flow, conventions, and patterns. Read this entire file before starting any task.
+>
+> 📋 **Also read [`guideline.md`](./guideline.md) before writing any code.** It defines naming conventions, architecture restrictions, approved libraries, response format, and error handling patterns that must be followed at all times.
+>
+> 🔌 **For service functions and API details, read [`service.md`](./service.md).** It documents every internal service function, external API integration (Cloudinary, JWT), socket events, and HTTP endpoint map.
 
 ---
 
@@ -137,13 +141,13 @@ User ──< Notification
 
 | Model | Key Fields |
 |-------|------------|
-| `User` | id, name, email, password, role, avatar |
-| `Team` | id, name, description, createdBy |
-| `TeamMember` | userId, teamId, role |
-| `Message` | id, teamId, senderId, content, replyToId |
-| `MessageReaction` | messageId, userId, emoji |
-| `DirectMessage` | senderId, recipientId, content |
-| `Notification` | userId, type, data, read |
+| `User` | id, name, email, password, role, profilePic, isBlocked |
+| `Team` | id, name, inviteCode, createdBy |
+| `TeamMember` | userId, teamId, role, lastReadAt |
+| `Message` | id, teamId, senderId, content, replyToId, fileUrl, fileType, fileName, isEdited, isDeleted |
+| `MessageReaction` | id, messageId, userId, emoji |
+| `DirectMessage` | id, senderId, recipientId, content, isRead |
+| `Notification` | id, userId, type, title, content, relatedId, isRead |
 
 All associations are defined in `models/index.js`.
 
@@ -167,13 +171,13 @@ Every domain has its own service folder under `service/v1/`:
 
 ```
 service/v1/
-├── auth/         → register, login, token refresh
-├── user/         → profile update, avatar upload
-├── team/         → create, join, leave, member management
-├── chat/         → sendMessage, getMessages, reactions
-├── direct/       → DM send, fetch conversation
-├── notification/ → create, mark-read, fetch
-└── admin/        → user management, platform stats
+├── auth/         → signup, login
+├── user/         → getProfile, updateProfile, changePassword, uploadProfilePic
+├── team/         → create, join, leave, getMembers, updateRole, removeMember, delete
+├── chat/         → sendMessage, getChatHistory, editMessage, deleteMessage, toggleReaction, markRead, getUnreadCounts
+├── direct/       → sendDirectMessage, getConversation, getContacts
+├── notification/ → createForTeam, getMyNotifications, markAsRead, markAllAsRead
+└── admin/        → getAllUsers, toggleBlock, deleteUser, getAllTeams, deleteTeam, deleteAnyMessage, getAnalytics, getAllMessages, broadcast
 ```
 
 All service functions are `async` and interact directly with Sequelize models.
@@ -202,14 +206,17 @@ See `.env.example` for the full list. Key variables:
 
 ```env
 PORT=5000
-DATABASE_URL=postgresql://...    # or separate DB_HOST, DB_NAME, DB_USER, DB_PASS vars
+DATABASE_URL=                    # Full PostgreSQL connection string (Supabase/Railway/etc)
+DB_NAME=postgres
+DB_USER=postgres.xxxxx
+DB_PASSWORD=your_password
+DB_HOST=aws-0-ap-south-1.pooler.supabase.com
+DB_PORT=5432
 JWT_SECRET=...
-CLOUDINARY_CLOUD_NAME=...
-CLOUDINARY_API_KEY=...
-CLOUDINARY_API_SECRET=...
-FRONTEND_URL=http://localhost:3000
-ADMIN_EMAIL=admin@example.com    # This email is auto-promoted to admin role on startup
-WORKERS=4                        # Number of cluster workers (default: CPU core count)
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+FRONTEND_URL=http://127.0.0.1:5500
 ```
 
 ---
